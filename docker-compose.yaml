@@ -1,0 +1,51 @@
+services:
+    aws-setup:
+        image: alpine
+        container_name: aws-setup
+        volumes:
+            - ~/.aws:/tmp/aws_host:ro
+            - aws_config_vol:/tmp/aws_vol
+        command: >
+            sh -c "cp -R /tmp/aws_host/* /tmp/aws_vol/ && chmod -R 755 /tmp/aws_vol/"
+
+    dynamodb-local:
+        image: amazon/dynamodb-local
+        ports:
+            - "8000:8000"
+        volumes:
+            - ~/dynamodb-data:/data
+        command: "-jar DynamoDBLocal.jar -dbPath /data -sharedDb"
+
+    dyno-canvas:
+        image: dyno-canvas
+        container_name: dyno-canvas
+        build:
+            args:
+                NODEJS_VERSION: "22.21.1"
+                DISTROLESS_NODEJS_VERSION: nodejs22-debian12
+        environment:
+            - AWS_PROFILE
+            - AWS_REGION
+            - AWS_ACCESS_KEY_ID
+            - AWS_SECRET_ACCESS_KEY
+            - AWS_SDK_LOAD_CONFIG=1
+            - AWS_CONFIG_FILE=/home/nonroot/.aws/config
+            - AWS_SHARED_CREDENTIALS_FILE=/home/nonroot/.aws/credentials
+            - DYNAMODB_ENDPOINT=http://dynamodb-local:8000
+            - DYNOCANVAS_ADMIN_TABLE_NAME=${DYNOCANVAS_ADMIN_TABLE_NAME:-dyno-canvas}
+            - DYNOCANVAS_REGIONS=${DYNOCANVAS_REGIONS:-local,ap-northeast-1}
+            - DYNACANVAS_BIND_HOST=0.0.0.0
+            - HOSTNAME=0.0.0.0
+        restart: always
+        ports:
+            - 8001:3000
+        depends_on:
+            aws-setup:
+                condition: service_completed_successfully
+            dynamodb-local:
+                condition: service_started
+        volumes:
+            - aws_config_vol:/home/nonroot/.aws:ro
+
+volumes:
+    aws_config_vol:

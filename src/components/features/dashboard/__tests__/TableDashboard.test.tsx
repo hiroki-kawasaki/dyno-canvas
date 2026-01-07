@@ -1,0 +1,130 @@
+import React from 'react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import TableDashboard from '@/components/features/dashboard/TableDashboard';
+import { UIProvider } from '@/contexts/UIContext';
+import * as dynamoActions from '@/actions/dynamo';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+
+// Mock Next.js hooks
+jest.mock('next/navigation', () => ({
+    useRouter: jest.fn(),
+    useSearchParams: jest.fn(),
+    usePathname: jest.fn(),
+}));
+
+// Mock Actions
+jest.mock('@/actions/dynamo', () => ({
+    searchItems: jest.fn(),
+    getAccessPatterns: jest.fn(),
+    deleteItem: jest.fn(),
+    batchDeleteItems: jest.fn(),
+    getSearchCount: jest.fn(),
+    exportAllItems: jest.fn(),
+    getTableDetails: jest.fn(),
+    createTable: jest.fn()
+}));
+
+const mockPush = jest.fn();
+const mockSearchParams = new URLSearchParams();
+
+describe('TableDashboard Component', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+        (useRouter as jest.Mock).mockReturnValue({ push: mockPush });
+        (useSearchParams as jest.Mock).mockReturnValue(mockSearchParams);
+        (usePathname as jest.Mock).mockReturnValue('/tables/TestTable');
+
+        (dynamoActions.getAccessPatterns as jest.Mock).mockResolvedValue([]);
+        (dynamoActions.getTableDetails as jest.Mock).mockResolvedValue({
+            success: true,
+            table: { GlobalSecondaryIndexes: [] }
+        });
+    });
+
+    const renderWithContext = (component: React.ReactNode) => {
+        return render(
+            <UIProvider allowDelete={true}>
+                {component}
+            </UIProvider>
+        );
+    };
+
+    it('renders correctly in free mode', async () => {
+        renderWithContext(<TableDashboard tableName="TestTable" mode="free" adminTableExists={true} />);
+
+        await waitFor(() => {
+            expect(screen.getByText('Free Search')).toBeInTheDocument();
+            expect(screen.getByPlaceholderText('e.g. USER#123')).toBeInTheDocument();
+        });
+    });
+
+    it('performs search in free mode', async () => {
+        (dynamoActions.searchItems as jest.Mock).mockResolvedValue({
+            success: true,
+            data: [{ PK: 'A', SK: 'B', name: 'TestItem' }]
+        });
+
+        renderWithContext(<TableDashboard tableName="TestTable" mode="free" adminTableExists={true} />);
+
+        const pkInput = screen.getByPlaceholderText('e.g. USER#123');
+        fireEvent.change(pkInput, { target: { value: 'A' } });
+
+        const searchButton = screen.getByText('Search');
+        fireEvent.click(searchButton);
+
+        await waitFor(() => {
+            expect(dynamoActions.searchItems).toHaveBeenCalledWith(expect.objectContaining({
+                tableName: 'TestTable',
+                mode: 'DIRECT',
+                pkInput: 'A'
+            }));
+            expect(screen.getByText(/TestItem/)).toBeInTheDocument();
+        });
+    });
+
+    it('handles delete item', async () => {
+        (dynamoActions.searchItems as jest.Mock).mockResolvedValue({
+            success: true,
+            data: [{ PK: 'A', SK: 'B' }]
+        });
+
+        renderWithContext(<TableDashboard tableName="TestTable" mode="free" adminTableExists={true} />);
+
+        // Wait for search result
+        const pkInput = screen.getByPlaceholderText('e.g. USER#123');
+        fireEvent.change(pkInput, { target: { value: 'A' } });
+        fireEvent.click(screen.getByText('Search'));
+
+        await waitFor(() => screen.getByText('A'));
+
+        const deleteButton = screen.getByTitle('Delete');
+        fireEvent.click(deleteButton);
+
+        // Confirm dialog comes from UIContext context. 
+        // We'll inspect if deleteItem is called after confirming.
+        // Assuming the Confirm modal text is "Confirm"
+        const confirmBtn = await screen.findByText('Confirm', { selector: 'button' });
+
+        (dynamoActions.deleteItem as jest.Mock).mockResolvedValue({ success: true });
+        fireEvent.click(confirmBtn);
+
+        await waitFor(() => {
+            expect(dynamoActions.deleteItem).toHaveBeenCalledWith('TestTable', 'A', 'B');
+        });
+    });
+
+    it('updates URL on search', async () => {
+        renderWithContext(<TableDashboard tableName="TestTable" mode="free" adminTableExists={true} />);
+
+        const pkInput = screen.getByPlaceholderText('e.g. USER#123');
+        fireEvent.change(pkInput, { target: { value: 'KEY' } });
+
+        // Simulating form submit
+        const form = screen.getByRole('button', { name: 'Search' }).closest('form');
+        fireEvent.submit(form!);
+
+        await waitFor(() => {
+            expect(mockPush).toHaveBeenCalledWith(expect.stringContaining('pk=KEY'));
+        });
+    });
+});
