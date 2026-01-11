@@ -1,9 +1,9 @@
 'use client'
 
 import { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
-import { Language, ToastMessage, ToastType } from '@/types';
-import { dictionary } from '@lib/i18n';
 import { switchLanguage } from '@actions/settings';
+import { dictionary } from '@lib/i18n';
+import { Language, ToastMessage, ToastType } from '@/types';
 
 interface ModalConfig {
     isOpen: boolean;
@@ -24,7 +24,6 @@ interface UIContextType {
     theme: 'system' | 'light' | 'dark';
     setTheme: (theme: 'system' | 'light' | 'dark') => void;
     accountId: string;
-    allowDelete: boolean;
 }
 
 const UIContext = createContext<UIContextType | undefined>(undefined);
@@ -33,14 +32,12 @@ export function UIProvider({
     children,
     initialLanguage,
     initialSidebarOpen = true,
-    accountId = 'Unknown',
-    allowDelete = false
+    accountId = 'Unknown'
 }: {
     children: ReactNode,
     initialLanguage?: Language,
     initialSidebarOpen?: boolean,
-    accountId?: string,
-    allowDelete?: boolean
+    accountId?: string
 }) {
     const [language, setLanguageState] = useState<Language>(initialLanguage || 'en');
     const [sidebarOpen, setSidebarOpen] = useState(initialSidebarOpen);
@@ -112,7 +109,7 @@ export function UIProvider({
             language, setLanguage, t, showToast, confirm,
             sidebarOpen, toggleSidebar,
             theme, setTheme,
-            accountId, allowDelete
+            accountId
         }}>
             {children}
             <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">

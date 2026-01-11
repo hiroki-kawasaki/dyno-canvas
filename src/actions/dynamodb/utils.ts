@@ -1,7 +1,9 @@
-import { getDynamoClient } from "@lib/dynamodb";
-import { getSettings } from "@actions/settings";
-import { SearchParams } from "@/types";
+'use server'
+
 import { QueryCommandInput } from "@aws-sdk/lib-dynamodb";
+import { getSettings } from "@actions/settings";
+import { getDynamoClient } from "@lib/dynamodb";
+import { SearchParams } from "@/types";
 
 export function getErrorMessage(error: unknown): string {
     if (typeof error === 'string') return error;
@@ -25,7 +27,11 @@ export async function getClient() {
     return getDynamoClient(mode === 'local', region, currentProfile);
 }
 
-export function buildKeyFromFormat(format: string, params: Record<string, string> | undefined, isPk: boolean): string {
+export function buildKeyFromFormat(
+    format: string,
+    params: Record<string, string> | undefined,
+    isPk: boolean
+): string {
     if (!params) {
         if (isPk && format.includes('{')) {
             throw new Error("PK parameters are missing.");

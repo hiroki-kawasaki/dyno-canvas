@@ -1,17 +1,23 @@
 'use client'
 
+import { EnvMode } from '@actions/settings';
 import { useUI } from '@/contexts/UIContext';
 import TableListTable from './TableListTable';
 import CreateTableModal from './CreateTableModal';
-import { EnvMode } from '@actions/settings';
 
 interface TableListContentProps {
     tables: string[];
     mode: EnvMode;
     adminTableName?: string;
+    readOnly: boolean;
 }
 
-export default function TableListContent({ tables, mode, adminTableName }: TableListContentProps) {
+export default function TableListContent({
+    tables,
+    mode,
+    adminTableName,
+    readOnly
+}: TableListContentProps) {
     const { t } = useUI();
 
     return (
@@ -20,10 +26,15 @@ export default function TableListContent({ tables, mode, adminTableName }: Table
                 <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">
                     {t.tables.title}
                 </h1>
-                <CreateTableModal />
+                {!readOnly && <CreateTableModal />}
             </div>
 
-            <TableListTable tables={tables} mode={mode} adminTableName={adminTableName} />
+            <TableListTable
+                tables={tables}
+                mode={mode}
+                adminTableName={adminTableName}
+                readOnly={readOnly}
+            />
         </main>
     );
 }

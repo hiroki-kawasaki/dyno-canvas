@@ -4,13 +4,25 @@ import {
     GetCommand,
     QueryCommand
 } from "@aws-sdk/lib-dynamodb";
+import { marshall } from "@aws-sdk/util-dynamodb";
 import { logger } from "@lib/logger";
 import { searchParamsSchema } from '@lib/validation';
-import { getClient, getErrorMessage, buildQueryInput } from "./utils";
-import { DynamoItem, SearchParams, SearchResponse } from "@/types";
-import { marshall } from "@aws-sdk/util-dynamodb";
+import {
+    DynamoItem,
+    SearchParams,
+    SearchResponse
+} from "@/types";
+import {
+    getClient,
+    getErrorMessage,
+    buildQueryInput
+} from "./utils";
 
-export async function getItem(tableName: string, pk: string, sk: string): Promise<DynamoItem | undefined> {
+export async function getItem(
+    tableName: string,
+    pk: string,
+    sk: string
+): Promise<DynamoItem | undefined> {
     try {
         const client = await getClient();
         const data = await client.send(new GetCommand({
@@ -69,7 +81,10 @@ export async function getSearchCount(params: SearchParams) {
     }
 }
 
-export async function exportAllItems(params: SearchParams, format: 'jsonl' | 'csv' = 'jsonl') {
+export async function exportAllItems(
+    params: SearchParams,
+    format: 'jsonl' | 'csv' = 'jsonl'
+) {
     try {
         const validated = searchParamsSchema.parse(params);
         const client = await getClient();
@@ -123,7 +138,13 @@ export async function exportAllItems(params: SearchParams, format: 'jsonl' | 'cs
 
         } else {
             const lines = items.map(item => {
-                const marshalled = marshall(item, { removeUndefinedValues: true, convertClassInstanceToMap: false });
+                const marshalled = marshall(
+                    item,
+                    {
+                        removeUndefinedValues: true,
+                        convertClassInstanceToMap: false
+                    }
+                );
                 return JSON.stringify({ Item: marshalled });
             });
             return { success: true, data: lines.join('\n') };
@@ -132,6 +153,9 @@ export async function exportAllItems(params: SearchParams, format: 'jsonl' | 'cs
     } catch (err) {
         logger.error({ err }, "Export Error");
         const message = err instanceof Error ? err.message : "Unknown error";
-        return { success: false, error: message };
+        return {
+            success: false,
+            error: message
+        };
     }
 }

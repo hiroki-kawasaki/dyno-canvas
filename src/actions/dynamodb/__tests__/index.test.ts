@@ -11,6 +11,7 @@ import {
     ListTablesCommand,
     CreateTableCommand,
     DeleteTableCommand,
+    UpdateTableCommand,
     CreateTableCommandInput,
 } from '@aws-sdk/client-dynamodb';
 import * as dynamoActions from '@actions/dynamodb';
@@ -74,10 +75,10 @@ describe('DynamoDB Actions', () => {
             expect(result.error).toBe("Item already exists or condition failed.");
         });
 
-        it('deleteGSI should fail if not local (mocked as aws)', async () => {
+        it('deleteGSI should succeed even if not local', async () => {
+            ddbMock.on(UpdateTableCommand).resolves({});
             const result = await dynamoActions.deleteGSI('T', 'Index1');
-            expect(result.success).toBe(false);
-            expect(result.error).toContain('is not allowed in this environment');
+            expect(result.success).toBe(true);
         });
 
         it('importItems should parse JSONL and batch write', async () => {

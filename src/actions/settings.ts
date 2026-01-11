@@ -2,12 +2,18 @@
 
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
-import { IS_LOCAL_AVAILABLE, DEFAULT_REGION, AVAILABLE_REGIONS, ALLOW_DELETE_TABLE, ADMIN_TABLE_NAME } from '@lib/config';
-import { Language } from '@/types';
-import { STSClient, GetCallerIdentityCommand } from "@aws-sdk/client-sts";
 import { promises as fs } from 'fs';
 import os from 'os';
 import path from 'path';
+import { STSClient, GetCallerIdentityCommand } from "@aws-sdk/client-sts";
+import {
+    IS_LOCAL_AVAILABLE,
+    DEFAULT_REGION,
+    AVAILABLE_REGIONS,
+    getReadOnly,
+    ADMIN_TABLE_NAME
+} from '@lib/config';
+import { Language } from '@/types';
 
 export type EnvMode = 'aws' | 'local';
 
@@ -108,7 +114,7 @@ export async function getSettings() {
     const availableProfiles = await getAvailableProfiles();
     const currentProfile = profileRaw || (availableProfiles.includes('default') ? 'default' : availableProfiles[0]);
 
-    const allowDelete = mode === 'local' || ALLOW_DELETE_TABLE;
+    const readOnly = getReadOnly();
     let accountId = 'Unknown';
 
     if (mode === 'local') {
@@ -135,7 +141,7 @@ export async function getSettings() {
         availableProfiles,
         language: (langRaw === 'ja' ? 'ja' : 'en') as Language,
         availableRegions: AVAILABLE_REGIONS,
-        allowDelete,
+        readOnly,
         accountId,
         sidebarOpen,
         adminTableName: ADMIN_TABLE_NAME

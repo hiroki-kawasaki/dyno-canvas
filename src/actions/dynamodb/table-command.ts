@@ -1,5 +1,8 @@
 'use server'
 
+import { revalidatePath } from 'next/cache';
+import { Readable } from 'stream';
+import readline from 'readline';
 import {
     CreateTableCommand,
     CreateTableCommandInput,
@@ -12,15 +15,12 @@ import {
     BatchWriteCommand,
     DynamoDBDocumentClient
 } from "@aws-sdk/lib-dynamodb";
-import { revalidatePath } from 'next/cache';
 import { unmarshall } from "@aws-sdk/util-dynamodb";
-import { ALLOW_DELETE_TABLE } from "@lib/config";
 import {
     saveAccessPattern,
     deleteAccessPattern as deleteAdminPattern
 } from "@actions/admin";
-import { Readable } from 'stream';
-import readline from 'readline';
+import { getReadOnly } from "@lib/config";
 import { logger } from "@lib/logger";
 import {
     tableNameSchema,
@@ -28,12 +28,22 @@ import {
     updateTtlSchema,
     accessPatternConfigSchema
 } from '@lib/validation';
-import { getClient, getErrorMessage } from "./utils";
-import { DynamoItem, AccessPatternConfig } from "@/types";
-import { getSettings } from "@actions/settings";
+import {
+    DynamoItem,
+    AccessPatternConfig
+} from "@/types";
+import {
+    getClient,
+    getErrorMessage
+} from "./utils";
+
 
 export async function createTable(tableName: string) {
     try {
+        if (getReadOnly()) return {
+            success: false,
+            error: "Operation not allowed in Read-Only mode."
+        };
         const validName = tableNameSchema.parse(tableName);
         const client = await getClient();
         const input: CreateTableCommandInput = {
@@ -52,38 +62,59 @@ export async function createTable(tableName: string) {
         await client.send(new CreateTableCommand(input));
         revalidatePath('/');
         logger.info({ tableName: validName }, "Table created successfully");
-        return { success: true };
+        return {
+            success: true
+        };
     } catch (error) {
         logger.error({ err: error, tableName }, "Failed to create table");
-        return { success: false, error: getErrorMessage(error) };
+        return {
+            success: false,
+            error: getErrorMessage(error)
+        };
     }
 }
 
 export async function deleteTable(tableName: string) {
     try {
         const validName = tableNameSchema.parse(tableName);
-        const { mode } = await getSettings();
-        if (mode !== 'local' && !ALLOW_DELETE_TABLE) {
-            return { success: false, error: "Table deletion is not allowed in this environment." };
+
+        if (getReadOnly()) {
+            return {
+                success: false,
+                error: "Operation not allowed in Read-Only mode."
+            };
         }
         const client = await getClient();
         await client.send(new DeleteTableCommand({ TableName: validName }));
         revalidatePath('/');
         logger.info({ tableName: validName }, "Table deleted successfully");
-        return { success: true };
+        return {
+            success: true
+        };
     } catch (error) {
         logger.error({ err: error, tableName }, "Failed to delete table");
-        return { success: false, error: getErrorMessage(error) };
+        return {
+            success: false,
+            error: getErrorMessage(error)
+        };
     }
 }
 
-export async function createGSI(tableName: string, indexName: string, pk: string, sk?: string) {
+export async function createGSI(
+    tableName: string,
+    indexName: string,
+    pk: string,
+    sk?: string
+) {
     try {
+        if (getReadOnly()) return {
+            success: false,
+            error: "Operation not allowed in Read-Only mode."
+        };
         const validated = createGsiSchema.parse({ tableName, indexName, pk, sk });
         const client = await getClient();
 
         const tableDesc = await client.send(new DescribeTableCommand({ TableName: validated.tableName }));
-
 
         const table = tableDesc.Table;
         if (!table) throw new Error("Table not found");
@@ -105,7 +136,10 @@ export async function createGSI(tableName: string, indexName: string, pk: string
 
         if (validated.sk) {
             if (validated.sk !== validated.pk) {
-                attributeDefinitions.push({ AttributeName: validated.sk, AttributeType: getAttrType(validated.sk) });
+                attributeDefinitions.push({
+                    AttributeName: validated.sk,
+                    AttributeType: getAttrType(validated.sk)
+                });
             }
             keySchema.push({ AttributeName: validated.sk, KeyType: "RANGE" as const });
         }
@@ -144,12 +178,14 @@ export async function createGSI(tableName: string, indexName: string, pk: string
     }
 }
 
-export async function deleteGSI(tableName: string, indexName: string) {
+export async function deleteGSI(
+    tableName: string,
+    indexName: string
+) {
     try {
         tableNameSchema.parse(tableName);
-        const { mode } = await getSettings();
-        if (mode !== 'local' && !ALLOW_DELETE_TABLE) {
-            return { success: false, error: "GSI deletion is not allowed in this environment." };
+        if (getReadOnly()) {
+            return { success: false, error: "Operation not allowed in Read-Only mode." };
         }
 
         const client = await getClient();
@@ -172,8 +208,13 @@ export async function deleteGSI(tableName: string, indexName: string) {
     }
 }
 
-export async function updateTTL(tableName: string, enabled: boolean, attributeName: string) {
+export async function updateTTL(
+    tableName: string,
+    enabled: boolean,
+    attributeName: string
+) {
     try {
+        if (getReadOnly()) return { success: false, error: "Operation not allowed in Read-Only mode." };
         const validated = updateTtlSchema.parse({ tableName, enabled, attributeName });
         const client = await getClient();
         await client.send(new UpdateTimeToLiveCommand({
@@ -192,8 +233,12 @@ export async function updateTTL(tableName: string, enabled: boolean, attributeNa
     }
 }
 
-export async function importItems(tableName: string, formData: FormData) {
+export async function importItems(
+    tableName: string,
+    formData: FormData
+) {
     try {
+        if (getReadOnly()) return { success: false, error: "Operation not allowed in Read-Only mode." };
         const file = formData.get('file') as File;
         if (!file) throw new Error("No file uploaded");
 
@@ -252,7 +297,12 @@ export async function importItems(tableName: string, formData: FormData) {
     }
 }
 
-async function processBatch(tableName: string, client: DynamoDBDocumentClient, items: DynamoItem[], errors: string[]) {
+async function processBatch(
+    tableName: string,
+    client: DynamoDBDocumentClient,
+    items: DynamoItem[],
+    errors: string[]
+) {
     const putRequests = items.map(item => ({
         PutRequest: {
             Item: item
@@ -270,24 +320,49 @@ async function processBatch(tableName: string, client: DynamoDBDocumentClient, i
     }
 }
 
-export async function upsertAccessPattern(tableName: string, config: AccessPatternConfig, allowOverwrite: boolean = true) {
+export async function upsertAccessPattern(
+    tableName: string,
+    config: AccessPatternConfig,
+    allowOverwrite: boolean = true
+) {
     try {
+        if (getReadOnly()) return {
+            success: false,
+            error: "Operation not allowed in Read-Only mode."
+        };
         tableNameSchema.parse(tableName);
         accessPatternConfigSchema.parse(config);
         logger.info({ tableName, patternId: config.id }, "Upserting access pattern");
         return saveAccessPattern(tableName, config, allowOverwrite);
     } catch (error) {
         logger.error({ err: error, tableName, config }, "UpsertAccessPattern Error");
-        return { success: false, error: getErrorMessage(error) };
+        return {
+            success: false,
+            error: getErrorMessage(error)
+        };
     }
 }
 
-export async function deleteAccessPattern(tableName: string, patternId: string) {
+export async function deleteAccessPattern(
+    tableName: string,
+    patternId: string
+) {
+    if (getReadOnly()) return {
+        success: false,
+        error: "Operation not allowed in Read-Only mode."
+    };
     return deleteAdminPattern(tableName, patternId);
 }
 
-export async function importAccessPatterns(tableName: string, formData: FormData) {
+export async function importAccessPatterns(
+    tableName: string,
+    formData: FormData
+) {
     try {
+        if (getReadOnly()) return {
+            success: false,
+            error: "Operation not allowed in Read-Only mode."
+        };
         const file = formData.get('file') as File;
         if (!file) throw new Error("No file uploaded");
 
@@ -330,11 +405,17 @@ export async function importAccessPatterns(tableName: string, formData: FormData
         }
 
         if (errors.length > 0) {
-            return { success: false, error: `Imported ${importedCount} patterns. Errors: ${errors.slice(0, 3).join(", ")}...` };
+            return {
+                success: false,
+                error: `Imported ${importedCount} patterns. Errors: ${errors.slice(0, 3).join(", ")}...`
+            };
         }
 
         logger.info({ tableName, count: importedCount }, "Import access patterns completed successfully");
-        return { success: true, count: importedCount };
+        return {
+            success: true,
+            count: importedCount
+        };
 
     } catch (err) {
         logger.error({ err, tableName }, "Import Patterns Error");

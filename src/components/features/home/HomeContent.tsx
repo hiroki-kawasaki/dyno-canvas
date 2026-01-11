@@ -1,12 +1,12 @@
 'use client'
 
 import { useState } from 'react';
-import { useUI } from '@/contexts/UIContext';
-import CreateTableModal from '@components/features/tables/CreateTableModal';
+import { useRouter } from 'next/navigation';
 import { EnvMode } from '@actions/settings';
 import { createAdminTable } from '@actions/admin';
-import { useRouter } from 'next/navigation';
+import CreateTableModal from '@components/features/tables/CreateTableModal';
 import TableListTable from '@components/features/tables/TableListTable';
+import { useUI } from '@/contexts/UIContext';
 
 interface HomeContentProps {
     tables: string[];
@@ -14,7 +14,11 @@ interface HomeContentProps {
     adminTableName?: string;
 }
 
-export default function HomeContent({ tables, mode, adminTableName = "dyno-canvas" }: HomeContentProps) {
+export default function HomeContent({
+    tables,
+    mode,
+    adminTableName = "dyno-canvas"
+}: HomeContentProps) {
     const { t, showToast, confirm } = useUI();
     const router = useRouter();
     const [isCreatingAdmin, setIsCreatingAdmin] = useState(false);
@@ -54,8 +58,6 @@ export default function HomeContent({ tables, mode, adminTableName = "dyno-canva
         );
     };
 
-
-
     return (
         <main className="w-full p-6">
             <div className="flex justify-between items-center mb-8">
@@ -90,19 +92,13 @@ export default function HomeContent({ tables, mode, adminTableName = "dyno-canva
                     </div>
                 </div>
             )}
-
-
-
             <div className="flex justify-between items-end mb-4">
                 <h2 className="text-xl font-bold text-gray-700 dark:text-gray-200">
                     {t.tables.title}
                 </h2>
                 <CreateTableModal />
             </div>
-
             <TableListTable tables={tables} mode={mode} adminTableName={adminTableName} />
-
-
         </main>
     );
 }

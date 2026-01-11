@@ -11,7 +11,13 @@ interface Props {
     backUrl?: string;
 }
 
-export default function ItemDetailHeader({ tableName, isCreateMode, pk, sk, backUrl }: Props) {
+export default function ItemDetailHeader({
+    tableName,
+    isCreateMode,
+    pk,
+    sk,
+    backUrl
+}: Props) {
     const { t } = useUI();
 
     return (

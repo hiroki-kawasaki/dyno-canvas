@@ -1,14 +1,24 @@
 'use server'
 
-import { ListTablesCommand, CreateTableCommand, CreateTableCommandInput, PutItemCommand, PutItemCommandInput, QueryCommand, DeleteItemCommand } from "@aws-sdk/client-dynamodb";
-import { GetCallerIdentityCommand, STSClient } from "@aws-sdk/client-sts";
+import { revalidatePath } from "next/cache";
+import {
+    ListTablesCommand,
+    CreateTableCommand,
+    CreateTableCommandInput,
+    PutItemCommand,
+    PutItemCommandInput,
+    QueryCommand,
+    DeleteItemCommand
+} from "@aws-sdk/client-dynamodb";
+import {
+    GetCallerIdentityCommand,
+    STSClient
+} from "@aws-sdk/client-sts";
+import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
+import { getSettings } from "@actions/settings";
 import { getDynamoClient } from "@lib/dynamodb";
 import { ADMIN_TABLE_NAME, DYNOCANVAS_ENV_NAME } from "@lib/config";
-import { getSettings } from "@actions/settings";
 import { AccessPatternDoc, AccessPatternConfig } from "@/types";
-import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
-import { revalidatePath } from "next/cache";
-
 
 async function getAccountId(mode: 'local' | 'aws', region?: string): Promise<string> {
     if (mode === 'local') {
@@ -65,7 +75,9 @@ export async function createAdminTable() {
     }
 }
 
-export async function getAccessPatternsForTable(targetTableName: string): Promise<AccessPatternDoc[]> {
+export async function getAccessPatternsForTable(
+    targetTableName: string
+): Promise<AccessPatternDoc[]> {
     const { mode, region } = await getSettings();
     const client = getDynamoClient(mode === 'local', region);
     const accountId = await getAccountId(mode, region);
@@ -122,7 +134,11 @@ export async function getAllAccessPatterns(): Promise<AccessPatternDoc[]> {
     }
 }
 
-export async function saveAccessPattern(targetTableName: string, config: AccessPatternConfig, allowOverwrite: boolean = true) {
+export async function saveAccessPattern(
+    targetTableName: string,
+    config: AccessPatternConfig,
+    allowOverwrite: boolean = true
+): Promise<{ success: boolean; error?: string }> {
     const { mode, region } = await getSettings();
     const client = getDynamoClient(mode === 'local', region);
     const accountId = await getAccountId(mode, region);
@@ -168,7 +184,10 @@ export async function saveAccessPattern(targetTableName: string, config: AccessP
     }
 }
 
-export async function deleteAccessPattern(targetTableName: string, patternId: string) {
+export async function deleteAccessPattern(
+    targetTableName: string,
+    patternId: string
+) {
     const { mode, region } = await getSettings();
     const client = getDynamoClient(mode === 'local', region);
     const accountId = await getAccountId(mode, region);

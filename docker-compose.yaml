@@ -34,9 +34,12 @@ services:
             - AWS_CONFIG_FILE=/home/nonroot/.aws/config
             - AWS_SHARED_CREDENTIALS_FILE=/home/nonroot/.aws/credentials
             - DYNAMODB_ENDPOINT=http://dynamodb-local:8000
-            - DYNOCANVAS_ADMIN_TABLE_NAME=${DYNOCANVAS_ADMIN_TABLE_NAME:-dyno-canvas}
-            - DYNOCANVAS_REGIONS=${DYNOCANVAS_REGIONS:-local,ap-northeast-1}
-            - DYNOCANVAS_BIND_HOST=0.0.0.0
+            - DYNOCANVAS_ADMIN_TABLE_NAME
+            - DYNOCANVAS_REGIONS
+            - DYNOCANVAS_READONLY=true
+            - DYNOCANVAS_AUTH
+            - DYNOCANVAS_AUTH_USER
+            - DYNOCANVAS_AUTH_PASS
         restart: always
         ports:
             - 8001:3000

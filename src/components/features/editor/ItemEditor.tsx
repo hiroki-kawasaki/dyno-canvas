@@ -1,24 +1,42 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react';
-import Editor from '@monaco-editor/react';
-import { updateItem, replaceItem, createItem } from '@actions/dynamodb';
-import { sortDynamoItemKeys } from '@lib/utils';
-import { DynamoItem } from '@/types';
-import { useUI } from '@/contexts/UIContext';
+import {
+    useState,
+    useEffect,
+    useCallback
+} from 'react';
 import { useRouter } from 'next/navigation';
-import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
+import {
+    marshall,
+    unmarshall
+} from "@aws-sdk/util-dynamodb";
+import Editor from '@monaco-editor/react';
+import {
+    updateItem,
+    replaceItem,
+    createItem
+} from '@actions/dynamodb';
+import { sortDynamoItemKeys } from '@lib/utils';
+import { useUI } from '@/contexts/UIContext';
+import { DynamoItem } from '@/types';
 
 interface ItemEditorProps {
     tableName: string;
     initialData: DynamoItem;
     onClose?: () => void;
     isCreateMode?: boolean;
+    readOnly?: boolean;
 }
 
 type EditorMode = 'simple' | 'dynamo';
 
-export default function ItemEditor({ tableName, initialData, onClose, isCreateMode = false }: ItemEditorProps) {
+export default function ItemEditor({
+    tableName,
+    initialData,
+    onClose,
+    isCreateMode = false,
+    readOnly = false
+}: ItemEditorProps) {
     const { t, showToast, confirm } = useUI();
     const router = useRouter();
 
@@ -71,7 +89,10 @@ export default function ItemEditor({ tableName, initialData, onClose, isCreateMo
 
         if (containsSets) {
             setMode('dynamo');
-            const marshalled = marshall(sortedData, { removeUndefinedValues: true, convertClassInstanceToMap: false });
+            const marshalled = marshall(sortedData, {
+                removeUndefinedValues: true,
+                convertClassInstanceToMap: false
+            });
             setJsonValue(JSON.stringify(marshalled, null, 4));
             setCanSwitchToSimple(false);
         } else {
@@ -223,13 +244,15 @@ export default function ItemEditor({ tableName, initialData, onClose, isCreateMo
                         {t.editor.format}
                     </button>
 
-                    <button
-                        onClick={handleSave}
-                        disabled={!isValid || isSaving}
-                        className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 px-4 py-2 rounded font-bold transition-colors text-sm min-w-[80px] flex items-center justify-center"
-                    >
-                        {isSaving ? t.common.saving : t.common.save}
-                    </button>
+                    {!readOnly && (
+                        <button
+                            onClick={handleSave}
+                            disabled={!isValid || isSaving}
+                            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 px-4 py-2 rounded font-bold transition-colors text-sm min-w-[80px] flex items-center justify-center"
+                        >
+                            {isSaving ? t.common.saving : t.common.save}
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -241,6 +264,7 @@ export default function ItemEditor({ tableName, initialData, onClose, isCreateMo
                     onChange={handleEditorChange}
                     theme="vs-dark"
                     options={{
+                        readOnly: readOnly,
                         minimap: { enabled: false },
                         formatOnPaste: true,
                         automaticLayout: true,

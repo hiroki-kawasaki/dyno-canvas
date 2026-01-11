@@ -1,12 +1,19 @@
 'use client'
 
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, {
+    useState,
+    useMemo,
+    useEffect,
+    useCallback
+} from 'react';
 import Link from 'next/link';
 import {
     useRouter,
     useSearchParams,
     usePathname
 } from 'next/navigation';
+import { GlobalSecondaryIndexDescription } from '@aws-sdk/client-dynamodb';
+import { marshall } from "@aws-sdk/util-dynamodb";
 import {
     searchItems,
     getAccessPatterns,
@@ -16,19 +23,17 @@ import {
     getSearchCount,
     getTableDetails
 } from '@actions/dynamodb';
+import { setSearchLimit } from '@actions/settings';
+import ImportModal from '@components/shared/ImportModal';
+import { parsePlaceholders, toSnakeCase } from '@lib/utils';
+import { useUI } from '@/contexts/UIContext';
 import {
     SearchMode,
     DynamoItem,
     AccessPatternConfig,
     SearchParams
 } from '@/types';
-import { parsePlaceholders, toSnakeCase } from '@lib/utils';
 import TableSettings from './TableSettings';
-import ImportModal from '@components/shared/ImportModal';
-import { useUI } from '@/contexts/UIContext';
-import { marshall } from "@aws-sdk/util-dynamodb";
-import { GlobalSecondaryIndexDescription } from '@aws-sdk/client-dynamodb';
-import { setSearchLimit } from '@actions/settings';
 
 interface TableDashboardProps {
     tableName: string;
@@ -36,6 +41,7 @@ interface TableDashboardProps {
     patternId?: string;
     adminTableExists?: boolean;
     initialLimit?: number;
+    readOnly?: boolean;
 }
 
 const ACTION_DROPDOWN_ID = 'actions-dropdown';
@@ -45,9 +51,10 @@ export default function TableDashboard({
     mode,
     patternId,
     adminTableExists = true,
-    initialLimit
+    initialLimit,
+    readOnly = false
 }: TableDashboardProps) {
-    const { t, showToast, confirm, allowDelete } = useUI();
+    const { t, showToast, confirm } = useUI();
     const router = useRouter();
     const searchParams = useSearchParams();
     const pathname = usePathname();
@@ -243,7 +250,6 @@ export default function TableDashboard({
         executeSearch(pageKeys[newPage]);
     };
 
-
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             const target = event.target as HTMLElement;
@@ -336,8 +342,6 @@ export default function TableDashboard({
         }
     };
 
-
-
     const handleDownload = async (target: 'selected' | 'results', format: 'jsonl' | 'csv') => {
         setIsActionsOpen(false);
         const searchMode: SearchMode = mode === 'free' ? 'DIRECT' : 'PATTERN';
@@ -376,7 +380,10 @@ export default function TableDashboard({
                 content = [header, ...rows].join('\n');
             } else {
                 content = selectedItems.map(item => {
-                    const marshalled = marshall(item, { removeUndefinedValues: true, convertClassInstanceToMap: false });
+                    const marshalled = marshall(item, {
+                        removeUndefinedValues: true,
+                        convertClassInstanceToMap: false
+                    });
                     return JSON.stringify({ Item: marshalled });
                 }).join('\n');
             }
@@ -460,18 +467,22 @@ export default function TableDashboard({
                     {tableName}
                 </h1>
                 <div className="flex gap-2">
-                    <button
-                        onClick={() => setIsImportModalOpen(true)}
-                        className="text-sm bg-green-600 text-white hover:bg-green-700 px-4 py-2 rounded font-bold transition-colors flex items-center gap-1 shadow-sm"
-                    >
-                        {t.common.import}
-                    </button>
-                    <Link
-                        href={`/tables/${tableName}/item`}
-                        className="text-sm bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded font-bold flex items-center gap-1 transition-colors shadow-sm"
-                    >
-                        {t.dashboard.newItem}
-                    </Link>
+                    {!readOnly && (
+                        <button
+                            onClick={() => setIsImportModalOpen(true)}
+                            className="text-sm bg-green-600 text-white hover:bg-green-700 px-4 py-2 rounded font-bold transition-colors flex items-center gap-1 shadow-sm"
+                        >
+                            {t.common.import}
+                        </button>
+                    )}
+                    {!readOnly && (
+                        <Link
+                            href={`/tables/${tableName}/item`}
+                            className="text-sm bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded font-bold flex items-center gap-1 transition-colors shadow-sm"
+                        >
+                            {t.dashboard.newItem}
+                        </Link>
+                    )}
                 </div>
             </div>
 
@@ -506,13 +517,15 @@ export default function TableDashboard({
 
                             {isActionsOpen && (
                                 <div className="absolute right-0 mt-1 w-70 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-lg z-50 text-sm py-1 animate-fade-in-up">
-                                    <button
-                                        onClick={() => setIsBulkDeleteModalOpen(true)}
-                                        disabled={selectedKeys.size === 0}
-                                        className="w-full text-left px-4 py-2 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        {t.dashboard.bulkDelete.replace('{count}', selectedKeys.size.toString())}
-                                    </button>
+                                    {!readOnly && (
+                                        <button
+                                            onClick={() => setIsBulkDeleteModalOpen(true)}
+                                            disabled={selectedKeys.size === 0}
+                                            className="w-full text-left px-4 py-2 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            {t.dashboard.bulkDelete.replace('{count}', selectedKeys.size.toString())}
+                                        </button>
+                                    )}
                                     <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
                                     <button
                                         onClick={() => handleDownload('selected', 'jsonl')}
@@ -741,7 +754,7 @@ export default function TableDashboard({
                                                 >
                                                     {t.common.detail}
                                                 </Link>
-                                                {allowDelete && (
+                                                {!readOnly && (
                                                     <button
                                                         onClick={() => handleDeleteItem(item.PK, item.SK)}
                                                         className="text-red-500 hover:text-red-700 text-xs hover:bg-red-50 dark:hover:bg-red-900/30 px-1 rounded flex items-center"
@@ -777,6 +790,7 @@ export default function TableDashboard({
                         onUpdate={handlePatternUpdate}
                         limit={limit}
                         setLimit={setLimit}
+                        readOnly={readOnly}
                     />
                 )
             }

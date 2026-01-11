@@ -1,9 +1,14 @@
 'use client'
 
+import { useTransition } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useTransition } from 'react';
-import { switchEnvMode, switchRegion, switchProfile, EnvMode } from '@actions/settings';
+import {
+    switchEnvMode,
+    switchRegion,
+    switchProfile,
+    EnvMode
+} from '@actions/settings';
 import { useUI } from '@/contexts/UIContext';
 
 interface HeaderProps {
@@ -17,7 +22,13 @@ interface HeaderProps {
     };
 }
 
-export default function Header({ currentMode, currentRegion, currentProfile, availableProfiles, systemStatus }: HeaderProps) {
+export default function Header({
+    currentMode,
+    currentRegion,
+    currentProfile,
+    availableProfiles,
+    systemStatus
+}: HeaderProps) {
     const { language, setLanguage, t, toggleSidebar, accountId, theme, setTheme } = useUI();
     const [isPending, startTransition] = useTransition();
     const pathname = usePathname();

@@ -41,7 +41,7 @@ describe('TableDashboard Component', () => {
 
     const renderWithContext = (component: React.ReactNode) => {
         return render(
-            <UIProvider allowDelete={true}>
+            <UIProvider>
                 {component}
             </UIProvider>
         );
@@ -119,5 +119,21 @@ describe('TableDashboard Component', () => {
         await waitFor(() => {
             expect(mockPush).toHaveBeenCalledWith(expect.stringContaining('pk=KEY'));
         });
+    });
+    it('hides actions in read-only mode', async () => {
+        (dynamoActions.searchItems as jest.Mock).mockResolvedValue({
+            success: true,
+            data: [{ PK: 'A', SK: 'B' }]
+        });
+
+        renderWithContext(<TableDashboard tableName="TestTable" mode="free" adminTableExists={true} readOnly={true} />);
+
+        fireEvent.change(screen.getByPlaceholderText('e.g. USER#123'), { target: { value: 'A' } });
+        fireEvent.click(screen.getByText('Search'));
+
+        await waitFor(() => screen.getByText('A'));
+
+        expect(screen.queryByTitle('Delete')).not.toBeInTheDocument();
+        expect(screen.queryByText('Import')).not.toBeInTheDocument();
     });
 });

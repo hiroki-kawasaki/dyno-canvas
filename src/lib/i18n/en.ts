@@ -13,6 +13,8 @@ export const en = {
         goBack: "Go back",
         export: "Export",
         import: "Import",
+        enabled: "Enabled",
+        disabled: "Disabled",
     },
     header: {
         local: "Local",
@@ -40,6 +42,7 @@ export const en = {
         region: "Region",
         accountId: "Account ID",
         adminTable: "Admin Table Name",
+        readOnly: "Read Only Mode",
         local: "DynamoDB Local",
         available: "Available",
         unavailable: "Unavailable",

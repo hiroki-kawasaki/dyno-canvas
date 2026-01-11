@@ -13,21 +13,29 @@ import {
     dynamoItemSchema,
     batchDeleteSchema
 } from '@lib/validation';
-import { getClient, getErrorMessage } from "./utils";
+import { getReadOnly } from "@lib/config";
 import { DynamoItem } from "@/types";
+import {
+    getClient,
+    getErrorMessage
+} from "./utils";
 
-export async function createItem(tableName: string, item: DynamoItem) {
+export async function createItem(
+    tableName: string,
+    item: unknown
+) {
     try {
+        if (getReadOnly()) return { success: false, error: "Operation not allowed in Read-Only mode." };
         tableNameSchema.parse(tableName);
-        dynamoItemSchema.parse(item);
+        const validItem = dynamoItemSchema.parse(item);
 
         const client = await getClient();
         await client.send(new PutCommand({
             TableName: tableName,
-            Item: item,
+            Item: validItem,
             ConditionExpression: "attribute_not_exists(PK) AND attribute_not_exists(SK)"
         }));
-        logger.info({ tableName, pk: item.PK, sk: item.SK }, "Item created successfully");
+        logger.info({ tableName, pk: validItem.PK, sk: validItem.SK }, "Item created successfully");
         return { success: true };
     } catch (error) {
         logger.error({ err: error, tableName, item }, "CreateItem Error");
@@ -35,8 +43,13 @@ export async function createItem(tableName: string, item: DynamoItem) {
     }
 }
 
-export async function deleteItem(tableName: string, pk: string, sk: string) {
+export async function deleteItem(
+    tableName: string,
+    pk: string,
+    sk?: string
+) {
     try {
+        if (getReadOnly()) return { success: false, error: "Operation not allowed in Read-Only mode." };
         tableNameSchema.parse(tableName);
         if (!pk) throw new Error("PK is required");
 
@@ -53,8 +66,12 @@ export async function deleteItem(tableName: string, pk: string, sk: string) {
     }
 }
 
-export async function batchDeleteItems(tableName: string, keys: { PK: string; SK: string }[]) {
+export async function batchDeleteItems(
+    tableName: string,
+    keys: { PK: string; SK: string }[]
+) {
     try {
+        if (getReadOnly()) return { success: false, error: "Operation not allowed in Read-Only mode." };
         const validated = batchDeleteSchema.parse({ tableName, keys });
         const client = await getClient();
         const chunkSize = 25;
@@ -96,6 +113,7 @@ export async function batchDeleteItems(tableName: string, keys: { PK: string; SK
 
 export async function updateItem(tableName: string, item: DynamoItem) {
     try {
+        if (getReadOnly()) return { success: false, error: "Operation not allowed in Read-Only mode." };
         tableNameSchema.parse(tableName);
         dynamoItemSchema.parse(item);
         const client = await getClient();
@@ -137,12 +155,20 @@ export async function updateItem(tableName: string, item: DynamoItem) {
 
     } catch (err) {
         logger.error({ err, tableName, item }, "DynamoDB Update Error");
-        return { success: false, error: getErrorMessage(err) };
+        return {
+            success: false,
+            error: getErrorMessage(err)
+        };
     }
 }
 
-export async function replaceItem(tableName: string, oldKey: { PK: string, SK: string }, newItem: DynamoItem) {
+export async function replaceItem(
+    tableName: string,
+    oldKey: { PK: string, SK: string },
+    newItem: DynamoItem
+) {
     try {
+        if (getReadOnly()) return { success: false, error: "Operation not allowed in Read-Only mode." };
         tableNameSchema.parse(tableName);
         dynamoItemSchema.parse(newItem);
 

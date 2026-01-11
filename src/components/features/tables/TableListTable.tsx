@@ -1,34 +1,45 @@
 'use client'
 
 import Link from 'next/link';
-import { useUI } from '@/contexts/UIContext';
-import { deleteTable } from '@actions/dynamodb';
 import { useRouter } from 'next/navigation';
+import { deleteTable } from '@actions/dynamodb';
 import { EnvMode } from '@actions/settings';
+import { useUI } from '@/contexts/UIContext';
 
 interface TableListTableProps {
     tables: string[];
     mode: EnvMode;
     adminTableName?: string;
     showActions?: boolean;
+    readOnly?: boolean;
 }
 
-export default function TableListTable({ tables, mode, adminTableName = "dyno-canvas", showActions = true }: TableListTableProps) {
+export default function TableListTable({
+    tables,
+    mode,
+    adminTableName = "dyno-canvas",
+    showActions = true,
+    readOnly = false
+}: TableListTableProps) {
     const { t, confirm, showToast } = useUI();
     const router = useRouter();
 
     const displayTables = tables.filter(t => t !== adminTableName);
 
     const handleDeleteTable = (tableName: string) => {
-        confirm(t.common.delete, t.home.deleteTableConfirm.replace('{tableName}', tableName), async () => {
-            const res = await deleteTable(tableName);
-            if (res.success) {
-                showToast(t.home.tableDeleted, "success");
-                router.refresh();
-            } else {
-                showToast(`${t.common.error}: ${res.error}`, "error");
+        confirm(
+            t.common.delete,
+            t.home.deleteTableConfirm.replace('{tableName}', tableName),
+            async () => {
+                const res = await deleteTable(tableName);
+                if (res.success) {
+                    showToast(t.home.tableDeleted, "success");
+                    router.refresh();
+                } else {
+                    showToast(`${t.common.error}: ${res.error}`, "error");
+                }
             }
-        });
+        );
     };
 
     if (displayTables.length === 0) {
@@ -64,7 +75,7 @@ export default function TableListTable({ tables, mode, adminTableName = "dyno-ca
                             </td>
                             {showActions && (
                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    {mode === 'local' && (
+                                    {mode === 'local' && !readOnly && (
                                         <button
                                             onClick={() => handleDeleteTable(table)}
                                             className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 ml-4"

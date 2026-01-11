@@ -13,6 +13,8 @@ export const ja = {
         goBack: "戻る",
         export: "エクスポート",
         import: "インポート",
+        enabled: "有効",
+        disabled: "無効",
     },
     header: {
         local: "ローカル",
@@ -40,6 +42,7 @@ export const ja = {
         region: "リージョン",
         accountId: "アカウントID",
         adminTable: "管理テーブル名",
+        readOnly: "読み取り専用",
         local: "DynamoDB Local",
         available: "利用可能",
         unavailable: "利用不可",

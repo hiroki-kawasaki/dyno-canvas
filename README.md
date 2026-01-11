@@ -9,6 +9,8 @@ Web-based GUI specialized for Single Table Design in Amazon DynamoDB.
 - **Search Settings**: Manage display count preferences (100, 250, 500, 1000 items) with cookie-based persistence through the new Search Settings menu.
 - **Reorganized UI Layout**: Pagination controls moved to the top of the item table for improved accessibility. Settings page reorganized into "Table Information" and "System Environment" sections.
 - **Actions Dropdown**: New unified dropdown menu for bulk operations including delete and export actions.
+- **Read-Only Mode**: Environment-based read-only mode to prevent accidental data modification.
+- **Basic Authentication**: Added support for Basic Authentication to secure the application.
 
 ## ✨ Features
 
@@ -19,12 +21,15 @@ Web-based GUI specialized for Single Table Design in Amazon DynamoDB.
   - **Region Switcher**: Easily switch between AWS regions (e.g. `ap-northeast-1`, `us-east-1`) without restarting.
 - **Table Management**: 
   - Create new tables easily with a standard schema (Partition Key: `PK`, Sort Key: `SK`).
-  - **Delete Tables & Indexes**: (Secure by Default) Table and GSI deletion is restricted in non-local environments unless explicitly permitted via environment variables.
+  - **Delete Tables & Indexes**: Table and GSI deletion is only available in Local environment, and can be completely disabled via Read-Only Mode.
 - **Enhanced UI/UX**:
   - **Modern Interface**: Clean, responsive layout with **Material Symbols** across the platform.
   - **Dynamic Sidebar**: Collapsible sidebar with state persistence via cookies.
   - **Dark Mode**: Support for Light, Dark, and System themes.
   - **Account Context**: Displays the current AWS Account ID for secure environment identification.
+- **Security & Access Control**:
+  - **Read-Only Mode**: disable all write operations via `DYNOCANVAS_READONLY` environment variable.
+  - **Basic Authentication**: Protect the application with Basic Auth using `DYNOCANVAS_AUTH` environment variable.
 - **Advanced Search**:
   - **Free Search**: Query items directly using Partition Key and optional Sort Key.
   - **Access Pattern Search**: Search using application-specific access patterns with dynamic parameter inputs.
@@ -112,11 +117,15 @@ DYNAMODB_ENDPOINT=http://localhost:8000
 # Base Path (e.g. /dynocanvas)
 DYNOCANVAS_BASE_PATH=/
 
-# Security: Set to 'true' to allow table/GSI deletion in non-local environments
-DYNOCANVAS_ALLOW_DELETE_TABLE=false
-
-# Networking: Bind host for the server (Default: localhost)
-DYNOCANVAS_BIND_HOST=0.0.0.0
+# Security: Set to 'true' to enable read-only mode (Disable all write operations)
+# DYNOCANVAS_READONLY=false
+#
+# Authentication: 'none' or 'basic'
+# DYNOCANVAS_AUTH=none
+#
+# Basic Auth Credentials (only used if DYNOCANVAS_AUTH=basic)
+# DYNOCANVAS_AUTH_USER=admin
+# DYNOCANVAS_AUTH_PASS=dynocanvas
 
 # Available Regions (comma separated)
 # Include 'local' to enable DynamoDB Local environment (Always displayed at the top)
@@ -205,21 +214,13 @@ Stored patterns use the following structure in the Admin Table (Default: `dyno-c
 This schema ensures that access patterns are isolated by **AWS Account** and **Region**, preventing conflicts when switching environments.
 
 
-## ⚠️ Security Notice (Local Development Only)
-
-This tool is designed for **local development and testing purposes**. 
-It does not include an application-level authentication layer.
-
-- **Do not deploy this application to a publicly accessible server.**
-- Ensure that the environment where this tool runs is protected by a firewall or private network.
-- Access control to your DynamoDB tables depends entirely on the AWS credentials provided to the container/server.
-
-
 ## 📄 License
 
 This project is licensed under the MIT License.
 
-## Disclaimer Regarding the Use of Generative AI
+---
+
+## ℹ️ Disclaimer Regarding the Use of Generative AI
 We are using generative AI in development.
 
 The tools used for development are as follows:

@@ -1,11 +1,11 @@
 'use client'
 
 import { useState } from 'react';
-import { useUI } from '@/contexts/UIContext';
+import { useRouter } from 'next/navigation';
 import { EnvMode } from '@actions/settings';
 import { exportTable, deleteTable } from '@actions/dynamodb';
 import ImportModal from '@components/shared/ImportModal';
-import { useRouter } from 'next/navigation';
+import { useUI } from '@/contexts/UIContext';
 
 interface SettingsContentProps {
     settings: {
@@ -13,6 +13,7 @@ interface SettingsContentProps {
         region: string;
         language: 'en' | 'ja';
         currentProfile: string;
+        readOnly: boolean;
     };
     systemStatus: {
         isLocalAvailable: boolean;
@@ -22,7 +23,13 @@ interface SettingsContentProps {
     adminTableName: string;
 }
 
-export default function SettingsContent({ settings, systemStatus, adminTableExists, adminTableName, accountId }: SettingsContentProps & { accountId: string }) {
+export default function SettingsContent({
+    settings,
+    systemStatus,
+    adminTableExists,
+    adminTableName,
+    accountId
+}: SettingsContentProps & { accountId: string }) {
     const { t, showToast, confirm, theme, language } = useUI();
     const router = useRouter();
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -111,6 +118,12 @@ export default function SettingsContent({ settings, systemStatus, adminTableExis
                             </span>
                         </div>
                         <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-700 pb-2">
+                            <span className="text-gray-600 dark:text-gray-400">{t.settings.readOnly}</span>
+                            <span className="font-medium text-gray-800 dark:text-gray-200">
+                                {settings.readOnly ? t.common.enabled : t.common.disabled}
+                            </span>
+                        </div>
+                        <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-700 pb-2">
                             <span className="text-gray-600 dark:text-gray-400">{t.settings.theme}</span>
                             <span className="font-medium text-gray-800 dark:text-gray-200 capitalize">{t.theme[theme]}</span>
                         </div>
@@ -131,12 +144,14 @@ export default function SettingsContent({ settings, systemStatus, adminTableExis
                         </p>
 
                         <div className="flex flex-wrap gap-3">
-                            <button
-                                onClick={() => setIsImportModalOpen(true)}
-                                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-medium transition-colors flex items-center gap-2 text-sm"
-                            >
-                                {t.common.import}
-                            </button>
+                            {!settings.readOnly && (
+                                <button
+                                    onClick={() => setIsImportModalOpen(true)}
+                                    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-medium transition-colors flex items-center gap-2 text-sm"
+                                >
+                                    {t.common.import}
+                                </button>
+                            )}
                             <button
                                 onClick={handleExportAdmin}
                                 disabled={isExporting}
@@ -145,7 +160,7 @@ export default function SettingsContent({ settings, systemStatus, adminTableExis
                                 {isExporting && '...'} {t.common.export}
                             </button>
 
-                            {settings.mode === 'local' && (
+                            {settings.mode === 'local' && !settings.readOnly && (
                                 <button
                                     onClick={handleDeleteAdminTable}
                                     disabled={isDeleting}

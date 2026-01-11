@@ -1,4 +1,3 @@
-
 import { z } from 'zod';
 
 export const tableNameSchema = z.string().min(1, "Table name is required");

@@ -1,7 +1,14 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react';
-import { AccessPatternConfig } from '@/types';
+import {
+    useState,
+    useEffect,
+    useCallback
+} from 'react';
+import {
+    GlobalSecondaryIndexDescription,
+    TimeToLiveDescription
+} from '@aws-sdk/client-dynamodb';
 import {
     upsertAccessPattern,
     deleteAccessPattern,
@@ -11,12 +18,9 @@ import {
     deleteGSI,
     updateTTL
 } from '@actions/dynamodb';
-import { useUI } from '@/contexts/UIContext';
 import ImportModal from '@components/shared/ImportModal';
-import {
-    GlobalSecondaryIndexDescription,
-    TimeToLiveDescription
-} from '@aws-sdk/client-dynamodb';
+import { useUI } from '@/contexts/UIContext';
+import { AccessPatternConfig } from '@/types';
 
 interface Props {
     tableName: string;
@@ -25,9 +29,18 @@ interface Props {
     onUpdate: () => void;
     limit: number;
     setLimit: (val: number) => void;
+    readOnly?: boolean;
 }
 
-export default function TableSettings({ tableName, patterns, onClose, onUpdate, limit, setLimit }: Props) {
+export default function TableSettings({
+    tableName,
+    patterns,
+    onClose,
+    onUpdate,
+    limit,
+    setLimit,
+    readOnly = false
+}: Props) {
     const { t, showToast, confirm } = useUI();
     const [activeTab, setActiveTab] = useState<'details' | 'patterns' | 'search'>('search');
 
@@ -204,13 +217,17 @@ export default function TableSettings({ tableName, patterns, onClose, onUpdate, 
         }
     };
 
-
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-7xl h-[80vh] flex flex-col">
                 <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
-                    <h2 className="text-xl font-bold">{t.tableSettings.title.replace('{tableName}', tableName)}</h2>
-                    <button onClick={onClose} className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                    <h2 className="text-xl font-bold">
+                        {t.tableSettings.title.replace('{tableName}', tableName)}
+                    </h2>
+                    <button
+                        onClick={onClose}
+                        className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                    >
                         ✕
                     </button>
                 </div>
@@ -273,12 +290,14 @@ export default function TableSettings({ tableName, patterns, onClose, onUpdate, 
                                     <section>
                                         <div className="flex justify-between items-center mb-4">
                                             <h3 className="text-lg font-semibold">{t.tableSettings.gsi}</h3>
-                                            <button
-                                                onClick={() => setIsCreatingGsi(!isCreatingGsi)}
-                                                className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700 transition-colors flex items-center justify-center"
-                                            >
-                                                {isCreatingGsi ? t.common.cancel : `${t.tableSettings.createGsi}`}
-                                            </button>
+                                            {!readOnly && (
+                                                <button
+                                                    onClick={() => setIsCreatingGsi(!isCreatingGsi)}
+                                                    className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700 transition-colors flex items-center justify-center"
+                                                >
+                                                    {isCreatingGsi ? t.common.cancel : `${t.tableSettings.createGsi}`}
+                                                </button>
+                                            )}
                                         </div>
 
                                         {isCreatingGsi && (
@@ -354,7 +373,8 @@ export default function TableSettings({ tableName, patterns, onClose, onUpdate, 
                                                                     </span>
                                                                 </td>
                                                                 <td className="p-3 text-right">
-                                                                    {isLocal && (
+
+                                                                    {isLocal && !readOnly && (
                                                                         <button
                                                                             onClick={() => handleDeleteGSI(gsi.IndexName!)}
                                                                             className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 rounded"
@@ -394,13 +414,15 @@ export default function TableSettings({ tableName, patterns, onClose, onUpdate, 
                                                     </div>
                                                 )}
                                             </div>
-                                            <button
-                                                onClick={handleToggleTTL}
-                                                className={`px-4 py-2 rounded text-sm font-bold text-white transition-colors flex items-center justify-center 
+                                            {!readOnly && (
+                                                <button
+                                                    onClick={handleToggleTTL}
+                                                    className={`px-4 py-2 rounded text-sm font-bold text-white transition-colors flex items-center justify-center 
                                                     ${ttl?.TimeToLiveStatus === 'ENABLED' ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}`}
-                                            >
-                                                {ttl?.TimeToLiveStatus === 'ENABLED' ? t.tableSettings.disableTtl : t.tableSettings.enableTtl}
-                                            </button>
+                                                >
+                                                    {ttl?.TimeToLiveStatus === 'ENABLED' ? t.tableSettings.disableTtl : t.tableSettings.enableTtl}
+                                                </button>
+                                            )}
                                         </div>
                                     </section>
                                 </>
@@ -410,12 +432,14 @@ export default function TableSettings({ tableName, patterns, onClose, onUpdate, 
                     ) : (
                         <div className="flex-grow flex overflow-hidden">
                             <div className="w-1/3 min-w-[300px] border-r border-gray-200 dark:border-gray-700 overflow-y-auto p-2 bg-gray-50/50 dark:bg-gray-800/50 flex flex-col">
-                                <button
-                                    onClick={handleNew}
-                                    className="w-full mb-2 bg-blue-600 text-white py-2 rounded hover:bg-blue-700 text-sm font-bold shadow-sm transition-colors flex items-center justify-center"
-                                >
-                                    {t.patterns.new}
-                                </button>
+                                {!readOnly && (
+                                    <button
+                                        onClick={handleNew}
+                                        className="w-full mb-2 bg-blue-600 text-white py-2 rounded hover:bg-blue-700 text-sm font-bold shadow-sm transition-colors flex items-center justify-center"
+                                    >
+                                        {t.patterns.new}
+                                    </button>
+                                )}
 
                                 <div className="space-y-1 flex-grow overflow-y-auto">
                                     {patterns.length === 0 ? (
@@ -438,27 +462,31 @@ export default function TableSettings({ tableName, patterns, onClose, onUpdate, 
                                                     <div className="font-medium text-gray-900 dark:text-gray-100">{p.label}</div>
                                                     <div className="text-xs text-gray-500 font-mono opacity-70">{p.id}</div>
                                                 </button>
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleDeletePattern(p.id);
-                                                    }}
-                                                    className="text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 p-1.5 rounded transition-colors"
-                                                >
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                                </button>
+                                                {!readOnly && (
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleDeletePattern(p.id);
+                                                        }}
+                                                        className="text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 p-1.5 rounded transition-colors"
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                    </button>
+                                                )}
                                             </div>
                                         ))
                                     )}
                                 </div>
 
                                 <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700 flex flex-col gap-2">
-                                    <button
-                                        onClick={() => setIsImportModalOpen(true)}
-                                        className="text-xs bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 py-1.5 rounded font-medium transition-colors flex items-center justify-center"
-                                    >
-                                        {t.common.import}
-                                    </button>
+                                    {!readOnly && (
+                                        <button
+                                            onClick={() => setIsImportModalOpen(true)}
+                                            className="text-xs bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 py-1.5 rounded font-medium transition-colors flex items-center justify-center"
+                                        >
+                                            {t.common.import}
+                                        </button>
+                                    )}
                                     <button
                                         onClick={handleExport}
                                         disabled={isExporting || patterns.length === 0}
@@ -540,13 +568,15 @@ export default function TableSettings({ tableName, patterns, onClose, onUpdate, 
                                             >
                                                 {t.common.cancel}
                                             </button>
-                                            <button
-                                                onClick={handleSavePattern}
-                                                disabled={isLoadingPattern}
-                                                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center"
-                                            >
-                                                {isLoadingPattern ? t.common.saving : t.common.save}
-                                            </button>
+                                            {!readOnly && (
+                                                <button
+                                                    onClick={handleSavePattern}
+                                                    disabled={isLoadingPattern}
+                                                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center"
+                                                >
+                                                    {isLoadingPattern ? t.common.saving : t.common.save}
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 ) : (

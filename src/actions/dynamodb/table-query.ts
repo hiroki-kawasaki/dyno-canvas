@@ -7,15 +7,16 @@ import {
     ScanCommand,
     ScanCommandOutput
 } from "@aws-sdk/client-dynamodb";
-import {
-    getAccessPatternsForTable
-} from "@actions/admin";
+import { marshall } from "@aws-sdk/util-dynamodb";
+import { getAccessPatternsForTable } from "@actions/admin";
 import { logger } from "@lib/logger";
 import { tableNameSchema } from '@lib/validation';
-import { getClient, getErrorMessage } from "./utils";
 import { getSettings } from "@actions/settings";
 import { AccessPatternConfig } from "@/types";
-import { marshall } from "@aws-sdk/util-dynamodb";
+import {
+    getClient,
+    getErrorMessage
+} from "./utils";
 
 export async function listTables(): Promise<string[]> {
     try {

@@ -1,8 +1,14 @@
 'use client'
 
-import { useState, useRef } from 'react';
+import {
+    useState,
+    useRef
+} from 'react';
 import { useUI } from '@/contexts/UIContext';
-import { importItems, importAccessPatterns } from '@actions/dynamodb';
+import {
+    importItems,
+    importAccessPatterns
+} from '@actions/dynamodb';
 
 interface ImportModalProps {
     tableName: string;
@@ -11,7 +17,12 @@ interface ImportModalProps {
     target: 'items' | 'patterns';
 }
 
-export default function ImportModal({ tableName, onClose, onSuccess, target }: ImportModalProps) {
+export default function ImportModal({
+    tableName,
+    onClose,
+    onSuccess,
+    target
+}: ImportModalProps) {
     const { t, showToast, confirm } = useUI();
     const [file, setFile] = useState<File | null>(null);
     const [isLoading, setIsLoading] = useState(false);
