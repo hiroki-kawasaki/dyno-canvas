@@ -48,6 +48,8 @@ export default async function RootLayout({
                         currentMode={settings.mode}
                         currentRegion={settings.region}
                         systemStatus={systemStatus}
+                        currentProfile={settings.currentProfile}
+                        availableProfiles={settings.availableProfiles}
                     />
                     <div className="flex flex-1 overflow-hidden">
                         <Sidebar />

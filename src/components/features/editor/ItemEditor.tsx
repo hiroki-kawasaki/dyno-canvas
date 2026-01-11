@@ -189,7 +189,7 @@ export default function ItemEditor({ tableName, initialData, onClose, isCreateMo
     };
 
     return (
-        <div className="flex flex-col h-[calc(100vh-140px)] bg-gray-900 text-white p-4 rounded-lg">
+        <div className="flex flex-col h-full bg-gray-900 text-white p-4 rounded-lg">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
                 <div className="flex items-center gap-4">
                     <h3 className="text-lg font-bold whitespace-nowrap">{t.editor.title}</h3>

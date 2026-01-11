@@ -5,14 +5,12 @@ import { UIProvider } from '@/contexts/UIContext';
 import * as dynamoActions from '@actions/dynamodb';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 
-// Mock Next.js hooks
 jest.mock('next/navigation', () => ({
     useRouter: jest.fn(),
     useSearchParams: jest.fn(),
     usePathname: jest.fn(),
 }));
 
-// Mock Actions
 jest.mock('@actions/dynamodb', () => ({
     searchItems: jest.fn(),
     getAccessPatterns: jest.fn(),
@@ -90,7 +88,6 @@ describe('TableDashboard Component', () => {
 
         renderWithContext(<TableDashboard tableName="TestTable" mode="free" adminTableExists={true} />);
 
-        // Wait for search result
         const pkInput = screen.getByPlaceholderText('e.g. USER#123');
         fireEvent.change(pkInput, { target: { value: 'A' } });
         fireEvent.click(screen.getByText('Search'));
@@ -100,9 +97,6 @@ describe('TableDashboard Component', () => {
         const deleteButton = screen.getByTitle('Delete');
         fireEvent.click(deleteButton);
 
-        // Confirm dialog comes from UIContext context. 
-        // We'll inspect if deleteItem is called after confirming.
-        // Assuming the Confirm modal text is "Confirm"
         const confirmBtn = await screen.findByText('Confirm', { selector: 'button' });
 
         (dynamoActions.deleteItem as jest.Mock).mockResolvedValue({ success: true });
@@ -119,7 +113,6 @@ describe('TableDashboard Component', () => {
         const pkInput = screen.getByPlaceholderText('e.g. USER#123');
         fireEvent.change(pkInput, { target: { value: 'KEY' } });
 
-        // Simulating form submit
         const form = screen.getByRole('button', { name: 'Search' }).closest('form');
         fireEvent.submit(form!);
 

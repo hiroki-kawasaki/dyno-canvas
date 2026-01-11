@@ -2,11 +2,41 @@
 
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
-import { IS_LOCAL_AVAILABLE, DEFAULT_REGION, AVAILABLE_REGIONS, ALLOW_DELETE_TABLE } from '@lib/config';
+import { IS_LOCAL_AVAILABLE, DEFAULT_REGION, AVAILABLE_REGIONS, ALLOW_DELETE_TABLE, ADMIN_TABLE_NAME } from '@lib/config';
 import { Language } from '@/types';
 import { STSClient, GetCallerIdentityCommand } from "@aws-sdk/client-sts";
+import { promises as fs } from 'fs';
+import os from 'os';
+import path from 'path';
 
 export type EnvMode = 'aws' | 'local';
+
+export async function getAvailableProfiles(): Promise<string[]> {
+    const profiles = new Set<string>();
+    const home = os.homedir();
+
+    const files = [
+        process.env.AWS_SHARED_CREDENTIALS_FILE || path.join(home, '.aws', 'credentials'),
+        process.env.AWS_CONFIG_FILE || path.join(home, '.aws', 'config')
+    ];
+
+    for (const file of files) {
+        try {
+            const content = await fs.readFile(file, 'utf-8');
+            const lines = content.split('\n');
+            for (const line of lines) {
+                const match = line.trim().match(/^\[\s*(?:profile\s+)?([^\]]+)\s*\]$/);
+                if (match) {
+                    profiles.add(match[1]);
+                }
+            }
+        } catch {
+            // ignore missing files
+        }
+    }
+
+    return Array.from(profiles).sort();
+}
 
 export async function switchEnvMode(mode: EnvMode) {
     if (mode === 'local') {
@@ -15,6 +45,20 @@ export async function switchEnvMode(mode: EnvMode) {
         const target = AVAILABLE_REGIONS.find(r => r !== 'local') || DEFAULT_REGION;
         await switchRegion(target);
     }
+}
+
+export async function switchProfile(profile: string) {
+    const cookieStore = await cookies();
+    cookieStore.set('db-mode', 'aws', { path: '/' });
+    cookieStore.set('db-profile', profile, { path: '/' });
+
+    const currentRegion = cookieStore.get('db-region')?.value;
+    if (currentRegion === 'local' || !currentRegion) {
+        const targetRegion = AVAILABLE_REGIONS.find(r => r !== 'local') || DEFAULT_REGION;
+        cookieStore.set('db-region', targetRegion, { path: '/' });
+    }
+
+    revalidatePath('/');
 }
 
 export async function switchRegion(region: string) {
@@ -42,6 +86,7 @@ export async function getSettings() {
     const modeRaw = cookieStore.get('db-mode')?.value;
     const regionRaw = cookieStore.get('db-region')?.value;
     const langRaw = cookieStore.get('db-language')?.value;
+    const profileRaw = cookieStore.get('db-profile')?.value;
 
     let mode: EnvMode = (modeRaw === 'local' ? 'local' : 'aws');
     let region = regionRaw || DEFAULT_REGION;
@@ -60,6 +105,9 @@ export async function getSettings() {
         }
     }
 
+    const availableProfiles = await getAvailableProfiles();
+    const currentProfile = profileRaw || (availableProfiles.includes('default') ? 'default' : availableProfiles[0]);
+
     const allowDelete = mode === 'local' || ALLOW_DELETE_TABLE;
     let accountId = 'Unknown';
 
@@ -67,7 +115,10 @@ export async function getSettings() {
         accountId = 'Local';
     } else {
         try {
-            const client = new STSClient({ region });
+            const { fromIni } = await import("@aws-sdk/credential-providers");
+            const credentials = currentProfile ? fromIni({ profile: currentProfile }) : undefined;
+
+            const client = new STSClient({ region, credentials });
             const data = await client.send(new GetCallerIdentityCommand({}));
             accountId = data.Account || 'Unknown';
         } catch (e) {
@@ -80,11 +131,14 @@ export async function getSettings() {
     return {
         mode,
         region,
+        currentProfile,
+        availableProfiles,
         language: (langRaw === 'ja' ? 'ja' : 'en') as Language,
         availableRegions: AVAILABLE_REGIONS,
         allowDelete,
         accountId,
-        sidebarOpen
+        sidebarOpen,
+        adminTableName: ADMIN_TABLE_NAME
     };
 }
 

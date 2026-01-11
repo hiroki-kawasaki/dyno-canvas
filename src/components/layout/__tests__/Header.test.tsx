@@ -5,13 +5,12 @@ import { UIProvider } from '@/contexts/UIContext';
 import * as settingsActions from '@actions/settings';
 import { usePathname } from 'next/navigation';
 
-// Mock Actions
 jest.mock('@actions/settings', () => ({
     switchEnvMode: jest.fn(),
     switchRegion: jest.fn(),
+    switchProfile: jest.fn(),
 }));
 
-// Mock Next.js hooks
 jest.mock('next/navigation', () => ({
     usePathname: jest.fn(),
 }));
@@ -27,13 +26,16 @@ describe('Header Component', () => {
         (usePathname as jest.Mock).mockReturnValue('/');
     });
 
-    const renderWithContext = () => {
+    const renderWithContext = (props?: Partial<React.ComponentProps<typeof Header>>) => {
         return render(
             <UIProvider>
                 <Header
                     currentMode="aws"
                     currentRegion="us-east-1"
+                    currentProfile="default"
+                    availableProfiles={['default', 'prod']}
                     systemStatus={mockSystemStatus}
+                    {...props}
                 />
             </UIProvider>
         );
@@ -42,25 +44,49 @@ describe('Header Component', () => {
     it('renders logo and navigation', () => {
         renderWithContext();
         expect(screen.getByText('DynoCanvas')).toBeInTheDocument();
+        expect(screen.getByDisplayValue('default')).toBeInTheDocument();
         expect(screen.getByDisplayValue('us-east-1')).toBeInTheDocument();
     });
 
-    it('handles region/mode change', async () => {
+    it('handles profile change to local', async () => {
         renderWithContext();
 
-        const select = screen.getByDisplayValue('us-east-1');
-        fireEvent.change(select, { target: { value: 'local' } });
+        const profileSelect = screen.getByDisplayValue('default');
+        fireEvent.change(profileSelect, { target: { value: 'Local' } });
 
         await waitFor(() => {
             expect(settingsActions.switchEnvMode).toHaveBeenCalledWith('local');
         });
     });
 
-    it('disables environment switcher on item detail page', () => {
+    it('handles region change', async () => {
+        renderWithContext();
+
+        const regionSelect = screen.getByDisplayValue('us-east-1');
+        fireEvent.change(regionSelect, { target: { value: 'ap-northeast-1' } });
+
+        await waitFor(() => {
+            expect(settingsActions.switchRegion).toHaveBeenCalledWith('ap-northeast-1');
+        });
+    });
+
+    it('disables dropdowns on item detail page', () => {
         (usePathname as jest.Mock).mockReturnValue('/tables/T/item?pk=A');
         renderWithContext();
 
-        const select = screen.getByDisplayValue('us-east-1');
-        expect(select).toBeDisabled();
+        const profileSelect = screen.getByDisplayValue('default');
+        const regionSelect = screen.getByDisplayValue('us-east-1');
+
+        expect(profileSelect).toBeDisabled();
+        expect(regionSelect).toBeDisabled();
+    });
+
+    it('disables region dropdown when in local mode', () => {
+        renderWithContext({ currentMode: 'local', currentRegion: 'local', currentProfile: 'Local' });
+
+        expect(screen.getByDisplayValue('Local')).toBeInTheDocument();
+
+        const regionSelect = screen.getByDisplayValue('local');
+        expect(regionSelect).toBeDisabled();
     });
 });

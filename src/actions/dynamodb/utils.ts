@@ -21,8 +21,8 @@ export function getErrorMessage(error: unknown): string {
 }
 
 export async function getClient() {
-    const { mode, region } = await getSettings();
-    return getDynamoClient(mode === 'local', region);
+    const { mode, region, currentProfile } = await getSettings();
+    return getDynamoClient(mode === 'local', region, currentProfile);
 }
 
 export function buildKeyFromFormat(format: string, params: Record<string, string> | undefined, isPk: boolean): string {

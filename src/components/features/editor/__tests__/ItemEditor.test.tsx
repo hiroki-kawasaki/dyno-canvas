@@ -5,12 +5,10 @@ import { UIProvider } from '@/contexts/UIContext';
 import * as dynamoActions from '@actions/dynamodb';
 import { useRouter } from 'next/navigation';
 
-// Mock Next.js hooks
 jest.mock('next/navigation', () => ({
     useRouter: jest.fn(),
 }));
 
-// Mock Monaco Editor since it doesn't run in JSDOM
 jest.mock('@monaco-editor/react', () => {
     return {
         __esModule: true,
@@ -26,7 +24,6 @@ jest.mock('@monaco-editor/react', () => {
     };
 });
 
-// Mock Actions
 jest.mock('@actions/dynamodb', () => ({
     createItem: jest.fn(),
     updateItem: jest.fn(),
@@ -106,7 +103,6 @@ describe('ItemEditor Component', () => {
         const saveButton = screen.getByText('Save');
         fireEvent.click(saveButton);
 
-        // Confirm dialog should appear
         const confirmBtn = await screen.findByText('Confirm', { selector: 'button' });
         fireEvent.click(confirmBtn);
 
@@ -134,17 +130,14 @@ describe('ItemEditor Component', () => {
     });
 
     it('should automatically switch to DynamoDB JSON mode when item has Sets', () => {
-        // Items coming from getClient in app are unmarshalled, so Sets are real Set objects
         const initialData = { PK: 'A', SK: 'B', tags: new Set(['tag1', 'tag2']) };
         renderWithContext(
             <ItemEditor tableName="TestTable" initialData={initialData} />
         );
 
-        // Should find "DynamoDB JSON" active
         const dynamoTab = screen.getByText('DynamoDB JSON');
         expect(dynamoTab).toHaveClass('bg-blue-600');
 
-        // Editor content should be marshalled JSON
         const editor = screen.getByTestId('monaco-editor-mock') as HTMLTextAreaElement;
         expect(editor.value).toContain('"SS":');
     });

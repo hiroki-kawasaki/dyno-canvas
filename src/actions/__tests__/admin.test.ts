@@ -20,12 +20,10 @@ import { GetCallerIdentityCommand, STSClient } from '@aws-sdk/client-sts';
 import * as adminActions from '@actions/admin';
 import { AccessPatternConfig } from '@/types';
 
-// Mock getSettings
 jest.mock('@actions/settings', () => ({
     getSettings: jest.fn().mockResolvedValue({ mode: 'aws', region: 'us-east-1' }),
 }));
 
-// Mock next/cache
 jest.mock('next/cache', () => ({
     revalidatePath: jest.fn(),
 }));

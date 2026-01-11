@@ -1,6 +1,5 @@
 'use client'
 
-import React from 'react';
 import Link from 'next/link';
 import { useUI } from '@/contexts/UIContext';
 import { deleteTable } from '@actions/dynamodb';
