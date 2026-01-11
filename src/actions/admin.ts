@@ -2,9 +2,9 @@
 
 import { ListTablesCommand, CreateTableCommand, CreateTableCommandInput, PutItemCommand, PutItemCommandInput, QueryCommand, DeleteItemCommand } from "@aws-sdk/client-dynamodb";
 import { GetCallerIdentityCommand, STSClient } from "@aws-sdk/client-sts";
-import { getDynamoClient } from "@/lib/dynamodb";
-import { ADMIN_TABLE_NAME, DYNOCANVAS_ENV_NAME } from "@/lib/config";
-import { getSettings } from "@/actions/settings";
+import { getDynamoClient } from "@lib/dynamodb";
+import { ADMIN_TABLE_NAME, DYNOCANVAS_ENV_NAME } from "@lib/config";
+import { getSettings } from "@actions/settings";
 import { AccessPatternDoc, AccessPatternConfig } from "@/types";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import { revalidatePath } from "next/cache";

@@ -1,8 +1,8 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import ItemEditor from '@/components/features/editor/ItemEditor';
+import ItemEditor from '@components/features/editor/ItemEditor';
 import { UIProvider } from '@/contexts/UIContext';
-import * as dynamoActions from '@/actions/dynamo';
+import * as dynamoActions from '@actions/dynamodb';
 import { useRouter } from 'next/navigation';
 
 // Mock Next.js hooks
@@ -27,7 +27,7 @@ jest.mock('@monaco-editor/react', () => {
 });
 
 // Mock Actions
-jest.mock('@/actions/dynamo', () => ({
+jest.mock('@actions/dynamodb', () => ({
     createItem: jest.fn(),
     updateItem: jest.fn(),
     replaceItem: jest.fn(),

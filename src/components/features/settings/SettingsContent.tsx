@@ -1,9 +1,9 @@
 'use client'
 import { useState } from 'react';
 import { useUI } from '@/contexts/UIContext';
-import { EnvMode } from '@/actions/settings';
-import { exportTable, deleteTable } from '@/actions/dynamo';
-import ImportModal from '@/components/shared/ImportModal';
+import { EnvMode } from '@actions/settings';
+import { exportTable, deleteTable } from '@actions/dynamodb';
+import ImportModal from '@components/shared/ImportModal';
 import { useRouter } from 'next/navigation';
 
 interface SettingsContentProps {

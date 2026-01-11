@@ -1,7 +1,7 @@
-import TableDashboard from '@/components/features/dashboard/TableDashboard';
-import TableHeader from '@/components/features/dashboard/TableHeader';
+import TableDashboard from '@components/features/dashboard/TableDashboard';
+import TableHeader from '@components/features/dashboard/TableHeader';
 
-import { checkAdminTableExists } from '@/actions/admin';
+import { checkAdminTableExists } from '@actions/admin';
 
 interface PageProps {
     params: Promise<{ tableName: string; patternId: string }>;

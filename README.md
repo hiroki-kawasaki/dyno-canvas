@@ -106,7 +106,7 @@ DYNACANVAS_BASE_PATH=/
 DYNOCANVAS_ALLOW_DELETE_TABLE=false
 
 # Networking: Bind host for the server (Default: localhost)
-DYNACANVAS_BIND_HOST=0.0.0.0
+DYNOCANVAS_BIND_HOST=0.0.0.0
 
 # Available Regions (comma separated)
 # Include 'local' to enable DynamoDB Local environment (Always displayed at the top)

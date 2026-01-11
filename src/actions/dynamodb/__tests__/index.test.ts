@@ -13,10 +13,10 @@ import {
     DeleteTableCommand,
     CreateTableCommandInput,
 } from '@aws-sdk/client-dynamodb';
-import * as dynamoActions from '@/actions/dynamo';
+import * as dynamoActions from '@actions/dynamodb';
 
 // Mock getSettings
-jest.mock('@/actions/settings', () => ({
+jest.mock('@actions/settings', () => ({
     getSettings: jest.fn().mockResolvedValue({ mode: 'aws', region: 'us-east-1' }),
 }));
 
@@ -26,13 +26,13 @@ jest.mock('next/cache', () => ({
 }));
 
 // Mock Admin Actions
-jest.mock('@/actions/admin', () => ({
+jest.mock('@actions/admin', () => ({
     getAccessPatternsForTable: jest.fn(),
     saveAccessPattern: jest.fn(),
     deleteAccessPattern: jest.fn(),
 }));
 
-import * as adminActions from '@/actions/admin';
+import * as adminActions from '@actions/admin';
 
 const ddbMock = mockClient(DynamoDBDocumentClient);
 
@@ -60,7 +60,7 @@ describe('DynamoDB Actions', () => {
 
         it('deleteTable should send DeleteTableCommand', async () => {
             // Mock local to allow deletion
-            (require('@/actions/settings').getSettings as jest.Mock).mockResolvedValue({ mode: 'local', region: 'local' }); // eslint-disable-line @typescript-eslint/no-require-imports
+            (require('@actions/settings').getSettings as jest.Mock).mockResolvedValue({ mode: 'local', region: 'local' }); // eslint-disable-line @typescript-eslint/no-require-imports
 
             ddbMock.on(DeleteTableCommand).resolves({});
             const result = await dynamoActions.deleteTable('OldTable');
@@ -68,7 +68,7 @@ describe('DynamoDB Actions', () => {
             expect(ddbMock.calls()).toHaveLength(1);
 
             // Reset mock
-            (require('@/actions/settings').getSettings as jest.Mock).mockResolvedValue({ mode: 'aws', region: 'us-east-1' }); // eslint-disable-line @typescript-eslint/no-require-imports
+            (require('@actions/settings').getSettings as jest.Mock).mockResolvedValue({ mode: 'aws', region: 'us-east-1' }); // eslint-disable-line @typescript-eslint/no-require-imports
         });
 
         // ... inside Item CRUD

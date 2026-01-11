@@ -3,11 +3,11 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { searchItems, getAccessPatterns, deleteItem, batchDeleteItems, exportAllItems, getSearchCount, getTableDetails } from '@/actions/dynamo';
+import { searchItems, getAccessPatterns, deleteItem, batchDeleteItems, exportAllItems, getSearchCount, getTableDetails } from '@actions/dynamodb';
 import { SearchMode, DynamoItem, AccessPatternConfig, SearchParams } from '@/types';
-import { parsePlaceholders, toSnakeCase } from '@/lib/utils';
+import { parsePlaceholders, toSnakeCase } from '@lib/utils';
 import TableSettings from './TableSettings';
-import ImportModal from '@/components/shared/ImportModal';
+import ImportModal from '@components/shared/ImportModal';
 import { useUI } from '@/contexts/UIContext';
 import { marshall } from "@aws-sdk/util-dynamodb";
 import { GlobalSecondaryIndexDescription } from '@aws-sdk/client-dynamodb';

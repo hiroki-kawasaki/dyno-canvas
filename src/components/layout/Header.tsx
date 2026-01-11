@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTransition } from 'react';
-import { switchEnvMode, switchRegion, EnvMode } from '@/actions/settings';
+import { switchEnvMode, switchRegion, EnvMode } from '@actions/settings';
 import { useUI } from '@/contexts/UIContext';
 
 interface HeaderProps {
@@ -95,9 +95,9 @@ export default function Header({ currentMode, currentRegion, systemStatus }: Hea
                             onChange={(e) => setTheme(e.target.value as 'system' | 'light' | 'dark')}
                             className="appearance-none bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-xs rounded px-3 py-1.5 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
-                            <option value="system">System</option>
-                            <option value="light">Light</option>
-                            <option value="dark">Dark</option>
+                            <option value="system">{t.theme.system}</option>
+                            <option value="light">{t.theme.light}</option>
+                            <option value="dark">{t.theme.dark}</option>
                         </select>
                         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
                             <span className="material-symbols-outlined text-[16px]">expand_more</span>

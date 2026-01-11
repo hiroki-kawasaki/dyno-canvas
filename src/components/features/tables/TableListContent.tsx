@@ -3,7 +3,7 @@
 import { useUI } from '@/contexts/UIContext';
 import TableListTable from './TableListTable';
 import CreateTableModal from './CreateTableModal';
-import { EnvMode } from '@/actions/settings';
+import { EnvMode } from '@actions/settings';
 
 interface TableListContentProps {
     tables: string[];

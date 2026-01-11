@@ -2,7 +2,7 @@
 
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
-import { IS_LOCAL_AVAILABLE, DEFAULT_REGION, AVAILABLE_REGIONS, ALLOW_DELETE_TABLE } from '@/lib/config';
+import { IS_LOCAL_AVAILABLE, DEFAULT_REGION, AVAILABLE_REGIONS, ALLOW_DELETE_TABLE } from '@lib/config';
 import { Language } from '@/types';
 import { STSClient, GetCallerIdentityCommand } from "@aws-sdk/client-sts";
 

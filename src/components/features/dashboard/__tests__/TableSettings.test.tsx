@@ -1,12 +1,12 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import TableSettings from '@/components/features/dashboard/TableSettings';
+import TableSettings from '@components/features/dashboard/TableSettings';
 import { UIProvider } from '@/contexts/UIContext';
-import * as dynamoActions from '@/actions/dynamo';
+import * as dynamoActions from '@actions/dynamodb';
 import { AccessPatternConfig } from '@/types';
 
 // Mock Actions
-jest.mock('@/actions/dynamo', () => ({
+jest.mock('@actions/dynamodb', () => ({
     getTableDetails: jest.fn(),
     upsertAccessPattern: jest.fn(),
     deleteAccessPattern: jest.fn(),

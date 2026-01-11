@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import Sidebar from '@/components/layout/Sidebar';
+import Sidebar from '@components/layout/Sidebar';
 import { UIProvider } from '@/contexts/UIContext';
 import { usePathname } from 'next/navigation';
 

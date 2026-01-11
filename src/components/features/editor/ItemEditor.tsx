@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Editor from '@monaco-editor/react';
-import { updateItem, replaceItem, createItem } from '@/actions/dynamo';
-import { sortDynamoItemKeys } from '@/lib/utils';
+import { updateItem, replaceItem, createItem } from '@actions/dynamodb';
+import { sortDynamoItemKeys } from '@lib/utils';
 import { DynamoItem } from '@/types';
 import { useUI } from '@/contexts/UIContext';
 import { useRouter } from 'next/navigation';
@@ -189,7 +189,7 @@ export default function ItemEditor({ tableName, initialData, onClose, isCreateMo
     };
 
     return (
-        <div className="flex flex-col h-full bg-gray-900 text-white p-4 rounded-lg">
+        <div className="flex flex-col h-[calc(100vh-140px)] bg-gray-900 text-white p-4 rounded-lg">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
                 <div className="flex items-center gap-4">
                     <h3 className="text-lg font-bold whitespace-nowrap">{t.editor.title}</h3>
@@ -198,13 +198,13 @@ export default function ItemEditor({ tableName, initialData, onClose, isCreateMo
                         <button
                             onClick={() => handleModeSwitch('simple')}
                             disabled={!canSwitchToSimple}
-                            className={`px-3 py-1 text-xs rounded transition-colors ${mode === 'simple' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed'}`}
+                            className={`px-3 py-1 text-xs rounded transition-colors flex items-center justify-center ${mode === 'simple' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed'}`}
                         >
                             {t.editor.jsonSimple}
                         </button>
                         <button
                             onClick={() => handleModeSwitch('dynamo')}
-                            className={`px-3 py-1 text-xs rounded transition-colors ${mode === 'dynamo' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'}`}
+                            className={`px-3 py-1 text-xs rounded transition-colors flex items-center justify-center ${mode === 'dynamo' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'}`}
                         >
                             {t.editor.jsonDynamo}
                         </button>
@@ -217,7 +217,7 @@ export default function ItemEditor({ tableName, initialData, onClose, isCreateMo
                     <button
                         onClick={handleFormat}
                         disabled={!isValid}
-                        className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded text-sm font-medium transition-colors disabled:opacity-50"
+                        className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded text-sm font-medium transition-colors disabled:opacity-50 flex items-center justify-center"
                         title={t.editor.format}
                     >
                         {t.editor.format}
@@ -226,7 +226,7 @@ export default function ItemEditor({ tableName, initialData, onClose, isCreateMo
                     <button
                         onClick={handleSave}
                         disabled={!isValid || isSaving}
-                        className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 px-4 py-2 rounded font-bold transition-colors text-sm min-w-[80px]"
+                        className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 px-4 py-2 rounded font-bold transition-colors text-sm min-w-[80px] flex items-center justify-center"
                     >
                         {isSaving ? t.common.saving : t.common.save}
                     </button>

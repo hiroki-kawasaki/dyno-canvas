@@ -1,4 +1,4 @@
-import { parsePlaceholders, toSnakeCase, sortDynamoItemKeys } from '@/lib/utils';
+import { parsePlaceholders, toSnakeCase, sortDynamoItemKeys } from '@lib/utils';
 
 describe('Utility Functions', () => {
     describe('parsePlaceholders', () => {

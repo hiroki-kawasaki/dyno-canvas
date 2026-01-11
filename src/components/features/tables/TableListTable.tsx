@@ -3,9 +3,9 @@
 import React from 'react';
 import Link from 'next/link';
 import { useUI } from '@/contexts/UIContext';
-import { deleteTable } from '@/actions/dynamo';
+import { deleteTable } from '@actions/dynamodb';
 import { useRouter } from 'next/navigation';
-import { EnvMode } from '@/actions/settings';
+import { EnvMode } from '@actions/settings';
 
 interface TableListTableProps {
     tables: string[];

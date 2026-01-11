@@ -1,7 +1,7 @@
-import ItemEditor from '@/components/features/editor/ItemEditor';
-import ItemDetailHeader from '@/components/features/editor/ItemDetailHeader';
+import ItemEditor from '@components/features/editor/ItemEditor';
+import ItemDetailHeader from '@components/features/editor/ItemDetailHeader';
 import { notFound } from 'next/navigation';
-import { getItem } from '@/actions/dynamo';
+import { getItem } from '@actions/dynamodb';
 
 interface Props {
     params: Promise<{ tableName: string }>;

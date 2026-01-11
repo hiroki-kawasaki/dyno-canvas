@@ -1,7 +1,7 @@
-import { getSettings, getSystemStatus } from '@/actions/settings';
-import { listTables } from '@/actions/dynamo';
-import SettingsContent from '@/components/features/settings/SettingsContent';
-import { ADMIN_TABLE_NAME } from '@/lib/config';
+import { getSettings, getSystemStatus } from '@actions/settings';
+import { listTables } from '@actions/dynamodb';
+import SettingsContent from '@components/features/settings/SettingsContent';
+import { ADMIN_TABLE_NAME } from '@lib/config';
 
 export default async function SettingsPage() {
     const settings = await getSettings();

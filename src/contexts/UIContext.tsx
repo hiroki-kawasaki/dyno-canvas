@@ -2,8 +2,8 @@
 
 import { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
 import { Language, ToastMessage, ToastType } from '@/types';
-import { dictionary } from '@/lib/i18n';
-import { switchLanguage } from '@/actions/settings';
+import { dictionary } from '@lib/i18n';
+import { switchLanguage } from '@actions/settings';
 
 interface ModalConfig {
     isOpen: boolean;

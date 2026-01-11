@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { useUI } from '@/contexts/UIContext';
-import { importItems, importAccessPatterns } from '@/actions/dynamo';
+import { importItems, importAccessPatterns } from '@actions/dynamodb';
 
 interface ImportModalProps {
     tableName: string;

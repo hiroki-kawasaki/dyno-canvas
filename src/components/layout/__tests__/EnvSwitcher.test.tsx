@@ -1,10 +1,10 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import EnvSwitcher from '@/components/layout/EnvSwitcher';
-import * as settingsActions from '@/actions/settings';
+import EnvSwitcher from '@components/layout/EnvSwitcher';
+import * as settingsActions from '@actions/settings';
 
 // Mock settings actions
-jest.mock('@/actions/settings', () => ({
+jest.mock('@actions/settings', () => ({
     switchEnvMode: jest.fn(),
 }));
 

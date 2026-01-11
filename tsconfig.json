@@ -24,6 +24,15 @@
 		"paths": {
 			"@/*": [
 				"./src/*"
+			],
+			"@actions/*": [
+				"./src/actions/*"
+			],
+			"@lib/*": [
+				"./src/lib/*"
+			],
+			"@components/*": [
+				"./src/components/*"
 			]
 		},
 		"plugins": [

@@ -1,12 +1,12 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import Header from '@/components/layout/Header';
+import Header from '@components/layout/Header';
 import { UIProvider } from '@/contexts/UIContext';
-import * as settingsActions from '@/actions/settings';
+import * as settingsActions from '@actions/settings';
 import { usePathname } from 'next/navigation';
 
 // Mock Actions
-jest.mock('@/actions/settings', () => ({
+jest.mock('@actions/settings', () => ({
     switchEnvMode: jest.fn(),
     switchRegion: jest.fn(),
 }));

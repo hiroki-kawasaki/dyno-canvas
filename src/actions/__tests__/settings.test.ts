@@ -1,7 +1,7 @@
 import { switchEnvMode, switchRegion, switchLanguage, getSettings, getSystemStatus } from '../settings';
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
-import { AVAILABLE_REGIONS, IS_LOCAL_AVAILABLE } from '@/lib/config';
+import { AVAILABLE_REGIONS, IS_LOCAL_AVAILABLE } from '@lib/config';
 
 jest.mock('next/headers', () => ({
     cookies: jest.fn(),

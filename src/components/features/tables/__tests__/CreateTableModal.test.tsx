@@ -1,8 +1,8 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import CreateTableModal from '@/components/features/tables/CreateTableModal';
+import CreateTableModal from '@components/features/tables/CreateTableModal';
 import { UIProvider } from '@/contexts/UIContext';
-import * as dynamoActions from '@/actions/dynamo';
+import * as dynamoActions from '@actions/dynamodb';
 import { useRouter } from 'next/navigation';
 
 // Mock Next.js hooks
@@ -11,7 +11,7 @@ jest.mock('next/navigation', () => ({
 }));
 
 // Mock Actions
-jest.mock('@/actions/dynamo', () => ({
+jest.mock('@actions/dynamodb', () => ({
     createTable: jest.fn(),
 }));
 

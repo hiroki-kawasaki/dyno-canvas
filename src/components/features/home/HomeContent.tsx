@@ -2,11 +2,11 @@
 
 import { useState } from 'react';
 import { useUI } from '@/contexts/UIContext';
-import CreateTableModal from '@/components/features/tables/CreateTableModal';
-import { EnvMode } from '@/actions/settings';
-import { createAdminTable } from '@/actions/admin';
+import CreateTableModal from '@components/features/tables/CreateTableModal';
+import { EnvMode } from '@actions/settings';
+import { createAdminTable } from '@actions/admin';
 import { useRouter } from 'next/navigation';
-import TableListTable from '@/components/features/tables/TableListTable';
+import TableListTable from '@components/features/tables/TableListTable';
 
 interface HomeContentProps {
     tables: string[];
