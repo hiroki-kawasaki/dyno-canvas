@@ -2,10 +2,19 @@
 
 Web-based GUI specialized for Single Table Design in Amazon DynamoDB.
 
+## 📢 Recent Updates (v0.2.0)
+
+- **AWS Profile Switching**: Seamlessly switch between AWS profiles directly from the header dropdown. Profile information and Account IDs are now displayed for better environment awareness.
+- **CSV Export Support**: Export search results or selected items to CSV format via the new "Actions" dropdown.
+- **Search Settings**: Manage display count preferences (100, 250, 500, 1000 items) with cookie-based persistence through the new Search Settings menu.
+- **Reorganized UI Layout**: Pagination controls moved to the top of the item table for improved accessibility. Settings page reorganized into "Table Information" and "System Environment" sections.
+- **Actions Dropdown**: New unified dropdown menu for bulk operations including delete and export actions.
+
 ## ✨ Features
 
 - **Table Dashboard**: Automatically lists all available DynamoDB tables in your region.
-- **Environment & Region Switching**: 
+- **Profile, Environment & Region Switching**: 
+  - **AWS Profile Switcher**: Switch between AWS profiles from your local credentials file directly via the header dropdown.
   - Seamlessly switch between **AWS** and **DynamoDB Local** environments using a unified dropdown in the global header.
   - **Region Switcher**: Easily switch between AWS regions (e.g. `ap-northeast-1`, `us-east-1`) without restarting.
 - **Table Management**: 
@@ -43,6 +52,7 @@ Web-based GUI specialized for Single Table Design in Amazon DynamoDB.
   - **Safe Key Updates**: Automatically handles Primary Key (PK/SK) changes by transactionally deleting the old item and creating a new one (with user confirmation).
   - **Import & Export**:
     - **Export Items**: Export search results to JSONL (JSON Lines) format with DynamoDB JSON marshalled format.
+    - **CSV Export**: Export search results or selected items to CSV format via the Actions dropdown.
     - **Import Items**: Bulk import items from JSONL files with validation and batch processing (25 items per batch).
     - **Export Access Patterns**: Export all access pattern definitions to JSONL format via Settings.
     - **Import Access Patterns**: Import access pattern definitions from JSONL files via Settings.
@@ -208,3 +218,17 @@ It does not include an application-level authentication layer.
 ## 📄 License
 
 This project is licensed under the MIT License.
+
+## Disclaimer Regarding the Use of Generative AI
+We are using generative AI in development.
+
+The tools used for development are as follows:
+- Google Antigravity
+- Gemini CLI
+- Google Gemini (Web)
+- Claude (Web)
+
+The models used for development are as follows.
+- Google Gemini 3.0 Pro
+- Google Gemini 3.0 Flash
+- Claude Opus 4.5
