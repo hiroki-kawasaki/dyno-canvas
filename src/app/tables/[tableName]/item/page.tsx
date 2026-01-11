@@ -31,7 +31,7 @@ export default async function ItemPage({ params, searchParams }: Props) {
     }
 
     return (
-        <main className="container mx-auto p-4 h-screen flex flex-col">
+        <main className="w-full p-6 h-screen flex flex-col">
             <ItemDetailHeader
                 tableName={decodedTableName}
                 isCreateMode={isCreateMode}

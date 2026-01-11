@@ -13,7 +13,7 @@ export default async function AccessPatternSearchPage({ params }: PageProps) {
     const adminTableExists = await checkAdminTableExists();
 
     return (
-        <main className="container mx-auto p-4 h-screen flex flex-col">
+        <main className="w-full p-6">
             <TableHeader tableName={decodedTableName} />
             <TableDashboard tableName={decodedTableName} mode="pattern" patternId={patternId} adminTableExists={adminTableExists} />
         </main>
