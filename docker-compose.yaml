@@ -36,7 +36,7 @@ services:
             - DYNAMODB_ENDPOINT=http://dynamodb-local:8000
             - DYNOCANVAS_ADMIN_TABLE_NAME
             - DYNOCANVAS_REGIONS
-            - DYNOCANVAS_READONLY=true
+            - DYNOCANVAS_READONLY
             - DYNOCANVAS_AUTH
             - DYNOCANVAS_AUTH_USER
             - DYNOCANVAS_AUTH_PASS

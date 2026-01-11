@@ -17,7 +17,8 @@ import { getReadOnly } from "@lib/config";
 import { DynamoItem } from "@/types";
 import {
     getClient,
-    getErrorMessage
+    getErrorMessage,
+    buildUpdateExpression
 } from "./utils";
 
 export async function createItem(
@@ -123,29 +124,20 @@ export async function updateItem(tableName: string, item: DynamoItem) {
             throw new Error("Primary keys (PK, SK) are required for update.");
         }
 
-        const updateExpressions: string[] = [];
-        const expressionAttributeNames: Record<string, string> = {};
-        const expressionAttributeValues: Record<string, unknown> = {};
-
-        Object.entries(attributes).forEach(([key, value], index) => {
-            const attrNamePlaceholder = `#attr${index}`;
-            const attrValuePlaceholder = `:val${index}`;
-
-            updateExpressions.push(`${attrNamePlaceholder} = ${attrValuePlaceholder}`);
-            expressionAttributeNames[attrNamePlaceholder] = key;
-            expressionAttributeValues[attrValuePlaceholder] = value;
-        });
-
-        if (updateExpressions.length === 0) {
-            return { success: true, message: "No attributes to update." };
+        let updateData;
+        try {
+            updateData = buildUpdateExpression(attributes);
+        } catch (e) {
+            if (e instanceof Error && e.message === "No attributes to update") {
+                return { success: true, message: "No attributes to update." };
+            }
+            throw e;
         }
 
         const input = {
             TableName: tableName,
             Key: { PK, SK },
-            UpdateExpression: `SET ${updateExpressions.join(", ")}`,
-            ExpressionAttributeNames: expressionAttributeNames,
-            ExpressionAttributeValues: expressionAttributeValues,
+            ...updateData,
             ReturnValues: "ALL_NEW" as const,
         };
 

@@ -5,17 +5,9 @@ import {
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import { fromIni } from "@aws-sdk/credential-providers";
 
-const clients: Record<string, DynamoDBDocumentClient> = {};
 
 export function getDynamoClient(useLocal: boolean = false, region?: string, profile?: string) {
     const safeRegion = region || process.env.AWS_DEFAULT_REGION || "ap-northeast-1";
-
-    const safeProfile = profile || process.env.AWS_DEFAULT_PROFILE || process.env.AWS_PROFILE;
-
-    const profileKey = !useLocal && safeProfile ? `:${safeProfile}` : '';
-    const key = useLocal ? 'local' : `aws:${safeRegion}${profileKey}`;
-
-    if (clients[key]) return clients[key];
 
     const config: DynamoDBClientConfig = {
         region: safeRegion,
@@ -30,8 +22,8 @@ export function getDynamoClient(useLocal: boolean = false, region?: string, prof
             secretAccessKey: "local"
         };
     } else {
-        if (safeProfile) {
-            config.credentials = fromIni({ profile: safeProfile });
+        if (profile) {
+            config.credentials = fromIni({ profile });
         }
     }
 
@@ -47,11 +39,8 @@ export function getDynamoClient(useLocal: boolean = false, region?: string, prof
         wrapNumbers: false,
     };
 
-    const docClient = DynamoDBDocumentClient.from(client, {
+    return DynamoDBDocumentClient.from(client, {
         marshallOptions,
         unmarshallOptions,
     });
-
-    clients[key] = docClient;
-    return docClient;
 }

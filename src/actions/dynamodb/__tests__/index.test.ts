@@ -6,6 +6,7 @@ import {
     DynamoDBDocumentClient,
     PutCommand,
     BatchWriteCommand,
+    UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
 import {
     ListTablesCommand,
@@ -70,14 +71,37 @@ describe('DynamoDB Actions', () => {
         it('createItem should handle overwrite error', async () => {
             ddbMock.on(PutCommand).rejects({ name: 'ConditionalCheckFailedException' });
             const item = { PK: 'A', SK: 'B' };
-            const result = await dynamoActions.createItem('T', item);
+            const result = await dynamoActions.createItem('TestTable', item);
             expect(result.success).toBe(false);
             expect(result.error).toBe("Item already exists or condition failed.");
         });
 
+        it('updateItem should send UpdateCommand with correct expression', async () => {
+            ddbMock.on(UpdateCommand).resolves({});
+            const item = { PK: 'A', SK: 'B', Name: 'NewName', Age: 30 };
+            const result = await dynamoActions.updateItem('TestTable', item);
+            expect(result.success).toBe(true);
+            expect(ddbMock.calls()).toHaveLength(1);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const input = ddbMock.call(0).args[0].input as any;
+            expect(input.TableName).toBe('TestTable');
+            expect(input.Key).toEqual({ PK: 'A', SK: 'B' });
+            expect(input.UpdateExpression).toContain('SET');
+            expect(Object.keys(input.ExpressionAttributeNames)).toHaveLength(2);
+            expect(Object.keys(input.ExpressionAttributeValues)).toHaveLength(2);
+        });
+
+        it('updateItem should return message if no attributes to update', async () => {
+            const item = { PK: 'A', SK: 'B' };
+            const result = await dynamoActions.updateItem('TestTable', item);
+            expect(result.success).toBe(true);
+            expect(result.message).toBe("No attributes to update.");
+            expect(ddbMock.calls()).toHaveLength(0);
+        });
+
         it('deleteGSI should succeed even if not local', async () => {
             ddbMock.on(UpdateTableCommand).resolves({});
-            const result = await dynamoActions.deleteGSI('T', 'Index1');
+            const result = await dynamoActions.deleteGSI('TestTable', 'Index1');
             expect(result.success).toBe(true);
         });
 
@@ -91,7 +115,7 @@ describe('DynamoDB Actions', () => {
                 get: jest.fn().mockReturnValue(mockFile)
             } as unknown as FormData;
 
-            const result = await dynamoActions.importItems('T', formData);
+            const result = await dynamoActions.importItems('TestTable', formData);
             expect(result.success).toBe(true);
             expect(result.count).toBe(2);
             expect(ddbMock.calls()).toHaveLength(1);
@@ -105,7 +129,7 @@ describe('DynamoDB Actions', () => {
             } as unknown as File;
             const formData = { get: jest.fn().mockReturnValue(mockFile) } as unknown as FormData;
 
-            const result = await dynamoActions.importItems('T', formData);
+            const result = await dynamoActions.importItems('TestTable', formData);
             expect(result.success).toBe(true);
             expect(result.count).toBe(30);
             expect(ddbMock.calls()).toHaveLength(2);
@@ -120,7 +144,7 @@ describe('DynamoDB Actions', () => {
 
             (adminActions.saveAccessPattern as jest.Mock).mockResolvedValue({ success: true });
 
-            const result = await dynamoActions.importAccessPatterns('T', formData);
+            const result = await dynamoActions.importAccessPatterns('TestTable', formData);
             expect(result.success).toBe(true);
             expect(result.count).toBe(1);
             expect(adminActions.saveAccessPattern).toHaveBeenCalled();
@@ -133,7 +157,7 @@ describe('DynamoDB Actions', () => {
             } as unknown as File;
             const formData = { get: jest.fn().mockReturnValue(mockFile) } as unknown as FormData;
 
-            const result = await dynamoActions.importAccessPatterns('T', formData);
+            const result = await dynamoActions.importAccessPatterns('TestTable', formData);
             expect(result.success).toBe(false);
             expect(result.error).toContain('Errors:');
         });

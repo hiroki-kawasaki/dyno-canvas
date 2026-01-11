@@ -1,5 +1,3 @@
-'use server'
-
 import { QueryCommandInput } from "@aws-sdk/lib-dynamodb";
 import { getSettings } from "@actions/settings";
 import { getDynamoClient } from "@lib/dynamodb";
@@ -148,4 +146,37 @@ export function buildQueryInput(params: SearchParams): QueryCommandInput {
     }
 
     return queryInput;
+}
+
+export function buildUpdateExpression(
+    attributes: Record<string, unknown>
+): {
+    UpdateExpression: string;
+    ExpressionAttributeNames: Record<string, string>;
+    ExpressionAttributeValues: Record<string, unknown>;
+} {
+    const expressions: string[] = [];
+    const names: Record<string, string> = {};
+    const values: Record<string, unknown> = {};
+
+    Object.entries(attributes).forEach(([key, value], index) => {
+        if (value === undefined) return;
+
+        const keyPlaceholder = `#attr${index}`;
+        const valuePlaceholder = `:val${index}`;
+
+        expressions.push(`${keyPlaceholder} = ${valuePlaceholder}`);
+        names[keyPlaceholder] = key;
+        values[valuePlaceholder] = value;
+    });
+
+    if (expressions.length === 0) {
+        throw new Error("No attributes to update");
+    }
+
+    return {
+        UpdateExpression: `SET ${expressions.join(", ")}`,
+        ExpressionAttributeNames: names,
+        ExpressionAttributeValues: values,
+    };
 }
