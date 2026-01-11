@@ -93,6 +93,13 @@ export const en = {
         importing: "Importing...",
         importConfirmTitle: "Import Confirmation",
         importConfirmMessage: "Are you sure you want to import {count} items? (Existing items with the same keys will be overwritten)",
+        beforeSearch: "Please enter search conditions to search.",
+        downloadSelectedJsonl: "Download selected items to JSONL",
+        downloadSelectedCsv: "Download selected items to CSV",
+        downloadResultsJsonl: "Download search results to JSONL",
+        downloadResultsCsv: "Download search results to CSV",
+        searchSettings: "Search Settings",
+        displayCount: "Display Count",
     },
     home: {
         title: "Tables",

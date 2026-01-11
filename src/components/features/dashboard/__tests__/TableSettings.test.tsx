@@ -40,6 +40,8 @@ describe('TableSettings Component', () => {
                     patterns={mockPatterns}
                     onClose={mockClose}
                     onUpdate={mockUpdate}
+                    limit={100}
+                    setLimit={jest.fn()}
                 />
             </UIProvider>
         );
@@ -48,6 +50,7 @@ describe('TableSettings Component', () => {
     it('renders and loads details', async () => {
         renderWithContext();
         expect(screen.getByText(/Table Settings/)).toBeInTheDocument();
+        fireEvent.click(screen.getByText('Table Details'));
         await waitFor(() => {
             expect(dynamoActions.getTableDetails).toHaveBeenCalledWith('TestTable');
         });
@@ -88,6 +91,7 @@ describe('TableSettings Component', () => {
 
         renderWithContext();
 
+        fireEvent.click(screen.getByText('Table Details'));
         await waitFor(() => screen.getByText('GSI1'));
 
         const deleteBtn = screen.getByTitle('Delete GSI');
@@ -104,6 +108,7 @@ describe('TableSettings Component', () => {
 
     it('toggles TTL', async () => {
         renderWithContext();
+        fireEvent.click(screen.getByText('Table Details'));
         await waitFor(() => screen.getByText('Enable TTL'));
 
         fireEvent.click(screen.getByText('Enable TTL'));

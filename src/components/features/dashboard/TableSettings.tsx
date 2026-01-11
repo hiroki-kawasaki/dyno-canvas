@@ -13,18 +13,23 @@ import {
 } from '@actions/dynamodb';
 import { useUI } from '@/contexts/UIContext';
 import ImportModal from '@components/shared/ImportModal';
-import { GlobalSecondaryIndexDescription, TimeToLiveDescription } from '@aws-sdk/client-dynamodb';
+import {
+    GlobalSecondaryIndexDescription,
+    TimeToLiveDescription
+} from '@aws-sdk/client-dynamodb';
 
 interface Props {
     tableName: string;
     patterns: AccessPatternConfig[];
     onClose: () => void;
     onUpdate: () => void;
+    limit: number;
+    setLimit: (val: number) => void;
 }
 
-export default function TableSettings({ tableName, patterns, onClose, onUpdate }: Props) {
+export default function TableSettings({ tableName, patterns, onClose, onUpdate, limit, setLimit }: Props) {
     const { t, showToast, confirm } = useUI();
-    const [activeTab, setActiveTab] = useState<'details' | 'patterns'>('details');
+    const [activeTab, setActiveTab] = useState<'details' | 'patterns' | 'search'>('search');
 
     const [editingId, setEditingId] = useState<string | null>(null);
     const [formData, setFormData] = useState<Partial<AccessPatternConfig>>({});
@@ -226,10 +231,40 @@ export default function TableSettings({ tableName, patterns, onClose, onUpdate }
                     >
                         {t.tableSettings.tabPatterns}
                     </button>
+                    <button
+                        className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${activeTab === 'search' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
+                        onClick={() => setActiveTab('search')}
+                    >
+                        {t.dashboard.searchSettings}
+                    </button>
                 </div>
 
                 <div className="flex-grow overflow-hidden flex flex-col">
-                    {activeTab === 'details' ? (
+                    {activeTab === 'search' ? (
+                        <div className="p-6 overflow-y-auto">
+                            <h3 className="text-lg font-semibold mb-4">{t.dashboard.searchSettings}</h3>
+                            <div className="bg-white dark:bg-gray-900 border p-4 rounded-lg">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">{t.dashboard.displayCount}</label>
+                                <div className="space-y-2">
+                                    {[100, 250, 500, 1000].map((val) => (
+                                        <div key={val} className="flex items-center">
+                                            <input
+                                                id={`limit-${val}`}
+                                                name="limit-radio"
+                                                type="radio"
+                                                checked={limit === val}
+                                                onChange={() => setLimit(val)}
+                                                className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                                            />
+                                            <label htmlFor={`limit-${val}`} className="ml-3 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                {val}
+                                            </label>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    ) : activeTab === 'details' ? (
                         <div className="p-6 overflow-y-auto space-y-8">
                             {loadingDetails ? (
                                 <div className="text-center py-8 text-gray-500">{t.common.loading}</div>
@@ -371,6 +406,7 @@ export default function TableSettings({ tableName, patterns, onClose, onUpdate }
                                 </>
                             )}
                         </div>
+
                     ) : (
                         <div className="flex-grow flex overflow-hidden">
                             <div className="w-1/3 min-w-[300px] border-r border-gray-200 dark:border-gray-700 overflow-y-auto p-2 bg-gray-50/50 dark:bg-gray-800/50 flex flex-col">
@@ -524,56 +560,60 @@ export default function TableSettings({ tableName, patterns, onClose, onUpdate }
                 </div>
             </div>
 
-            {isImportModalOpen && (
-                <ImportModal
-                    tableName={tableName}
-                    onClose={() => setIsImportModalOpen(false)}
-                    onSuccess={() => {
-                        setIsImportModalOpen(false);
-                        onUpdate();
-                    }}
-                    target="patterns"
-                />
-            )}
+            {
+                isImportModalOpen && (
+                    <ImportModal
+                        tableName={tableName}
+                        onClose={() => setIsImportModalOpen(false)}
+                        onSuccess={() => {
+                            setIsImportModalOpen(false);
+                            onUpdate();
+                        }}
+                        target="patterns"
+                    />
+                )
+            }
 
-            {isTtlModalOpen && (
-                <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 max-w-sm w-full">
-                        <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">{t.tableSettings.enableTtl}</h3>
+            {
+                isTtlModalOpen && (
+                    <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
+                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 max-w-sm w-full">
+                            <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">{t.tableSettings.enableTtl}</h3>
 
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                {t.tableSettings.ttlAttribute}
-                            </label>
-                            <input
-                                className="w-full border p-2 rounded dark:bg-gray-900 dark:border-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                                value={ttlAttribute}
-                                onChange={(e) => setTtlAttribute(e.target.value)}
-                                placeholder="expireAt"
-                            />
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                                UNIX timestamp (seconds) attribute
-                            </p>
-                        </div>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    {t.tableSettings.ttlAttribute}
+                                </label>
+                                <input
+                                    className="w-full border p-2 rounded dark:bg-gray-900 dark:border-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                                    value={ttlAttribute}
+                                    onChange={(e) => setTtlAttribute(e.target.value)}
+                                    placeholder="expireAt"
+                                />
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                                    UNIX timestamp (seconds) attribute
+                                </p>
+                            </div>
 
-                        <div className="flex justify-end gap-2">
-                            <button
-                                onClick={() => setIsTtlModalOpen(false)}
-                                className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors flex items-center justify-center"
-                            >
-                                {t.common.cancel}
-                            </button>
-                            <button
-                                onClick={handleEnableTtlSubmit}
-                                disabled={isLoadingPattern || !ttlAttribute}
-                                className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded disabled:opacity-50 transition-colors flex items-center justify-center"
-                            >
-                                {isLoadingPattern ? t.common.saving : t.tableSettings.enableTtl}
-                            </button>
+                            <div className="flex justify-end gap-2">
+                                <button
+                                    onClick={() => setIsTtlModalOpen(false)}
+                                    className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors flex items-center justify-center"
+                                >
+                                    {t.common.cancel}
+                                </button>
+                                <button
+                                    onClick={handleEnableTtlSubmit}
+                                    disabled={isLoadingPattern || !ttlAttribute}
+                                    className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded disabled:opacity-50 transition-colors flex items-center justify-center"
+                                >
+                                    {isLoadingPattern ? t.common.saving : t.tableSettings.enableTtl}
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
         </div>
     );
 }

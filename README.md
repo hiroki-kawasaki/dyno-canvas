@@ -100,7 +100,7 @@ AWS_REGION=ap-northeast-1
 DYNAMODB_ENDPOINT=http://localhost:8000
 
 # Base Path (e.g. /dynocanvas)
-DYNACANVAS_BASE_PATH=/
+DYNOCANVAS_BASE_PATH=/
 
 # Security: Set to 'true' to allow table/GSI deletion in non-local environments
 DYNOCANVAS_ALLOW_DELETE_TABLE=false

@@ -5,9 +5,7 @@ import {
     QueryCommand
 } from "@aws-sdk/lib-dynamodb";
 import { logger } from "@lib/logger";
-import {
-    searchParamsSchema
-} from '@lib/validation';
+import { searchParamsSchema } from '@lib/validation';
 import { getClient, getErrorMessage, buildQueryInput } from "./utils";
 import { DynamoItem, SearchParams, SearchResponse } from "@/types";
 import { marshall } from "@aws-sdk/util-dynamodb";
@@ -71,7 +69,7 @@ export async function getSearchCount(params: SearchParams) {
     }
 }
 
-export async function exportAllItems(params: SearchParams) {
+export async function exportAllItems(params: SearchParams, format: 'jsonl' | 'csv' = 'jsonl') {
     try {
         const validated = searchParamsSchema.parse(params);
         const client = await getClient();
@@ -92,13 +90,44 @@ export async function exportAllItems(params: SearchParams) {
             lastEvaluatedKey = res.LastEvaluatedKey;
         } while (lastEvaluatedKey);
 
-        const lines = items.map(item => {
-            const marshalled = marshall(item, { removeUndefinedValues: true, convertClassInstanceToMap: false });
-            return JSON.stringify({ Item: marshalled });
-        });
+        if (format === 'csv') {
+            if (items.length === 0) return { success: true, data: '' };
 
-        logger.info({ count: items.length }, "Exported items successfully");
-        return { success: true, data: lines.join('\n') };
+            const allKeys = new Set<string>();
+            items.forEach(item => {
+                Object.keys(item).forEach(k => allKeys.add(k));
+            });
+
+            const sortedKeys = Array.from(allKeys).sort((a, b) => {
+                if (a === 'PK') return -1;
+                if (b === 'PK') return 1;
+                if (a === 'SK') return -1;
+                if (b === 'SK') return 1;
+                return a.localeCompare(b);
+            });
+
+            const header = sortedKeys.join(',');
+            const rows = items.map(item => {
+                return sortedKeys.map(key => {
+                    const val = item[key];
+                    if (val === undefined || val === null) return '';
+                    const str = typeof val === 'object' ? JSON.stringify(val) : String(val);
+                    if (str.includes(',') || str.includes('\n') || str.includes('"')) {
+                        return `"${str.replace(/"/g, '""')}"`;
+                    }
+                    return str;
+                }).join(',');
+            });
+
+            return { success: true, data: [header, ...rows].join('\n') };
+
+        } else {
+            const lines = items.map(item => {
+                const marshalled = marshall(item, { removeUndefinedValues: true, convertClassInstanceToMap: false });
+                return JSON.stringify({ Item: marshalled });
+            });
+            return { success: true, data: lines.join('\n') };
+        }
 
     } catch (err) {
         logger.error({ err }, "Export Error");

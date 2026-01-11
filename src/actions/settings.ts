@@ -149,3 +149,8 @@ export async function getSystemStatus() {
         availableRegions: AVAILABLE_REGIONS
     };
 }
+
+export async function setSearchLimit(limit: number) {
+    const cookieStore = await cookies();
+    cookieStore.set('db-limit', limit.toString(), { path: '/' });
+}
