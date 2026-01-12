@@ -1,20 +1,36 @@
-
 import { z } from 'zod';
 
-export const tableNameSchema = z.string().min(1, "Table name is required");
+// Reusable schemas based on DynamoDB naming rules
+// Tables and Indexes: 3-255 characters, allowed: a-z, A-Z, 0-9, '_', '-', '.'
+const nameSchema = z.string()
+    .min(3, "Name must be at least 3 characters")
+    .max(255, "Name must be at most 255 characters")
+    .regex(/^[a-zA-Z0-9_.-]+$/, "Invalid name format. Allowed: a-z, A-Z, 0-9, '_', '-', '.'");
 
-export const dynamoItemSchema = z.object({
-    PK: z.string().min(1, "PK is required"),
-    SK: z.string(),
-}).passthrough();
+// Attribute names: 1-255 characters.
+// While DynamoDB allows special chars in attributes, for keys and management we enforce standard safe chars.
+const attributeNameSchema = z.string()
+    .min(1, "Attribute name is required")
+    .max(255, "Attribute name too long")
+    .regex(/^[a-zA-Z0-9_.-]+$/, "Invalid attribute name format. Allowed: a-z, A-Z, 0-9, '_', '-', '.'");
+
+// IDs for internal config (access patterns etc): strict slug
+const idSchema = z.string()
+    .min(1, "ID is required")
+    .max(128, "ID too long")
+    .regex(/^[a-zA-Z0-9_-]+$/, "Invalid ID format. Allowed: a-z, A-Z, 0-9, '_', '-'");
+
+export const tableNameSchema = nameSchema;
+
+export const dynamoItemSchema = z.record(z.string(), z.unknown());
 
 export const accessPatternConfigSchema = z.object({
-    id: z.string().min(1, "ID is required"),
-    label: z.string().min(1, "Label is required"),
-    description: z.string().default(""),
+    id: idSchema,
+    label: z.string().min(1, "Label is required").max(100),
+    description: z.string().max(500).default(""),
     pkFormat: z.string().min(1, "PK Format is required"),
     skFormat: z.string().optional(),
-    indexName: z.string().optional(),
+    indexName: nameSchema.optional(),
 });
 
 export const searchParamsSchema = z.object({
@@ -22,13 +38,13 @@ export const searchParamsSchema = z.object({
     mode: z.enum(['DIRECT', 'PATTERN']),
     pkInput: z.string().optional(),
     skInput: z.string().optional(),
-    indexName: z.string().optional(),
-    pkName: z.string().optional(),
-    skName: z.string().optional(),
+    indexName: nameSchema.optional(),
+    pkName: attributeNameSchema.optional(),
+    skName: attributeNameSchema.optional(),
     patternConfig: accessPatternConfigSchema.optional(),
     patternParams: z.record(z.string(), z.string()).optional(),
     filters: z.record(z.string(), z.string()).optional(),
-    limit: z.number().optional(),
+    limit: z.number().min(1).max(1000).optional(),
     startKey: z.record(z.string(), z.unknown()).optional(),
 }).refine(data => {
     if (data.mode === 'DIRECT' && !data.pkInput) {
@@ -45,15 +61,15 @@ export const searchParamsSchema = z.object({
 
 export const createGsiSchema = z.object({
     tableName: tableNameSchema,
-    indexName: z.string().min(1, "Index Name is required"),
-    pk: z.string().min(1, "PK Name is required"),
-    sk: z.string().optional(),
+    indexName: nameSchema,
+    pk: attributeNameSchema,
+    sk: attributeNameSchema.optional(),
 });
 
 export const updateTtlSchema = z.object({
     tableName: tableNameSchema,
     enabled: z.boolean(),
-    attributeName: z.string().min(1, "Attribute Name is required"),
+    attributeName: attributeNameSchema,
 });
 
 export const batchDeleteSchema = z.object({
@@ -62,4 +78,5 @@ export const batchDeleteSchema = z.object({
         PK: z.string().min(1),
         SK: z.string()
     })).min(1, "At least one key is required")
+        .max(25, "Cannot delete more than 25 items at once")
 });

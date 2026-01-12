@@ -1,4 +1,4 @@
-import { parsePlaceholders, toSnakeCase, sortDynamoItemKeys } from '@/lib/utils';
+import { parsePlaceholders, toSnakeCase, sortDynamoItemKeys } from '@lib/utils';
 
 describe('Utility Functions', () => {
     describe('parsePlaceholders', () => {
@@ -39,7 +39,6 @@ describe('Utility Functions', () => {
 
             expect(keys[0]).toBe('PK');
             expect(keys[1]).toBe('SK');
-            // The order of other keys depends on implementation, but PK/SK must be first
         });
     });
 });

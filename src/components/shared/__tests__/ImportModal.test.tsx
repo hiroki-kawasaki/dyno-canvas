@@ -1,11 +1,9 @@
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import ImportModal from '@/components/shared/ImportModal';
+import ImportModal from '@components/shared/ImportModal';
 import { UIProvider } from '@/contexts/UIContext';
-import * as dynamoActions from '@/actions/dynamo';
+import * as dynamoActions from '@actions/dynamodb';
 
-// Mock Actions
-jest.mock('@/actions/dynamo', () => ({
+jest.mock('@actions/dynamodb', () => ({
     importItems: jest.fn(),
     importAccessPatterns: jest.fn(),
 }));
@@ -20,7 +18,6 @@ describe('ImportModal Component', () => {
 
     const createMockFile = (content: string, name: string) => {
         const file = new File([content], name, { type: 'application/x-jsonlines' });
-        // JSDOM might not have .text() on File
         file.text = jest.fn().mockResolvedValue(content);
         return file;
     };
@@ -60,7 +57,6 @@ describe('ImportModal Component', () => {
         const importBtn = screen.getByText('Import');
         fireEvent.click(importBtn);
 
-        // Confirm dialog
         const confirmBtn = await screen.findByText('Confirm', { selector: 'button' });
         fireEvent.click(confirmBtn);
 

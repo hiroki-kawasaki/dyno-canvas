@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { getSettings, getSystemStatus } from "@actions/settings";
+import Header from "@components/layout/Header";
+import Sidebar from "@components/layout/Sidebar";
 import { UIProvider } from "@/contexts/UIContext";
-import Header from "@/components/layout/Header";
-import Sidebar from "@/components/layout/Sidebar";
-import { getSettings, getSystemStatus } from "@/actions/settings";
+
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -42,12 +43,13 @@ export default async function RootLayout({
                     initialLanguage={settings.language}
                     initialSidebarOpen={settings.sidebarOpen}
                     accountId={settings.accountId}
-                    allowDelete={settings.allowDelete}
                 >
                     <Header
                         currentMode={settings.mode}
                         currentRegion={settings.region}
                         systemStatus={systemStatus}
+                        currentProfile={settings.currentProfile}
+                        availableProfiles={settings.availableProfiles}
                     />
                     <div className="flex flex-1 overflow-hidden">
                         <Sidebar />

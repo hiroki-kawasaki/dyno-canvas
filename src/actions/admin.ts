@@ -1,21 +1,39 @@
 'use server'
 
-import { ListTablesCommand, CreateTableCommand, CreateTableCommandInput, PutItemCommand, PutItemCommandInput, QueryCommand, DeleteItemCommand } from "@aws-sdk/client-dynamodb";
-import { GetCallerIdentityCommand, STSClient } from "@aws-sdk/client-sts";
-import { getDynamoClient } from "@/lib/dynamodb";
-import { ADMIN_TABLE_NAME, DYNOCANVAS_ENV_NAME } from "@/lib/config";
-import { getSettings } from "@/actions/settings";
-import { AccessPatternDoc, AccessPatternConfig } from "@/types";
-import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import { revalidatePath } from "next/cache";
+import {
+    ListTablesCommand,
+    CreateTableCommand,
+    CreateTableCommandInput,
+    PutItemCommand,
+    PutItemCommandInput,
+    QueryCommand,
+    DeleteItemCommand
+} from "@aws-sdk/client-dynamodb";
+import {
+    GetCallerIdentityCommand,
+    STSClient
+} from "@aws-sdk/client-sts";
+import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
+import { getSettings } from "@actions/settings";
+import { getDynamoClient } from "@lib/dynamodb";
+import {
+    ADMIN_TABLE_NAME,
+    DYNOCANVAS_ENV_NAME
+} from "@lib/config";
+import {
+    AccessPatternDoc,
+    AccessPatternConfig
+} from "@/types";
 
-
-async function getAccountId(mode: 'local' | 'aws'): Promise<string> {
+async function getAccountId(mode: 'local' | 'aws', region?: string): Promise<string> {
     if (mode === 'local') {
         return DYNOCANVAS_ENV_NAME;
     }
     try {
-        const client = new STSClient({});
+        const client = new STSClient({
+            region: region || "ap-northeast-1"
+        });
         const data = await client.send(new GetCallerIdentityCommand({}));
         return data.Account || DYNOCANVAS_ENV_NAME;
     } catch (e) {
@@ -32,7 +50,7 @@ export async function checkAdminTableExists(region?: string): Promise<boolean> {
         return (data.TableNames || []).includes(ADMIN_TABLE_NAME);
     } catch (error) {
         console.error("Failed to list tables for checking admin table:", error);
-        return false;
+        throw error;
     }
 }
 
@@ -63,10 +81,12 @@ export async function createAdminTable() {
     }
 }
 
-export async function getAccessPatternsForTable(targetTableName: string): Promise<AccessPatternDoc[]> {
+export async function getAccessPatternsForTable(
+    targetTableName: string
+): Promise<AccessPatternDoc[]> {
     const { mode, region } = await getSettings();
     const client = getDynamoClient(mode === 'local', region);
-    const accountId = await getAccountId(mode);
+    const accountId = await getAccountId(mode, region);
 
     const regionKey = mode === 'local' ? 'dynamodb-local' : region;
 
@@ -95,7 +115,7 @@ export async function getAccessPatternsForTable(targetTableName: string): Promis
 export async function getAllAccessPatterns(): Promise<AccessPatternDoc[]> {
     const { mode, region } = await getSettings();
     const client = getDynamoClient(mode === 'local', region);
-    const accountId = await getAccountId(mode);
+    const accountId = await getAccountId(mode, region);
 
     const regionKey = mode === 'local' ? 'dynamodb-local' : region;
     const pk = `AccountId#${accountId}#DynoCanvas#AccessPattern`;
@@ -120,10 +140,14 @@ export async function getAllAccessPatterns(): Promise<AccessPatternDoc[]> {
     }
 }
 
-export async function saveAccessPattern(targetTableName: string, config: AccessPatternConfig, allowOverwrite: boolean = true) {
+export async function saveAccessPattern(
+    targetTableName: string,
+    config: AccessPatternConfig,
+    allowOverwrite: boolean = true
+): Promise<{ success: boolean; error?: string }> {
     const { mode, region } = await getSettings();
     const client = getDynamoClient(mode === 'local', region);
-    const accountId = await getAccountId(mode);
+    const accountId = await getAccountId(mode, region);
     const regionKey = mode === 'local' ? 'dynamodb-local' : region;
 
     const timestamp = new Date().toISOString();
@@ -166,10 +190,13 @@ export async function saveAccessPattern(targetTableName: string, config: AccessP
     }
 }
 
-export async function deleteAccessPattern(targetTableName: string, patternId: string) {
+export async function deleteAccessPattern(
+    targetTableName: string,
+    patternId: string
+) {
     const { mode, region } = await getSettings();
     const client = getDynamoClient(mode === 'local', region);
-    const accountId = await getAccountId(mode);
+    const accountId = await getAccountId(mode, region);
     const regionKey = mode === 'local' ? 'dynamodb-local' : region;
 
     const pk = `AccountId#${accountId}#DynoCanvas#AccessPattern`;

@@ -23,7 +23,9 @@ services:
             args:
                 NODEJS_VERSION: "22.21.1"
                 DISTROLESS_NODEJS_VERSION: nodejs22-debian12
+                DYNOCANVAS_BASE_PATH: ""
         environment:
+            - HOSTNAME=0.0.0.0
             - AWS_PROFILE
             - AWS_REGION
             - AWS_ACCESS_KEY_ID
@@ -32,10 +34,12 @@ services:
             - AWS_CONFIG_FILE=/home/nonroot/.aws/config
             - AWS_SHARED_CREDENTIALS_FILE=/home/nonroot/.aws/credentials
             - DYNAMODB_ENDPOINT=http://dynamodb-local:8000
-            - DYNOCANVAS_ADMIN_TABLE_NAME=${DYNOCANVAS_ADMIN_TABLE_NAME:-dyno-canvas}
-            - DYNOCANVAS_REGIONS=${DYNOCANVAS_REGIONS:-local,ap-northeast-1}
-            - DYNACANVAS_BIND_HOST=0.0.0.0
-            - HOSTNAME=0.0.0.0
+            - DYNOCANVAS_ADMIN_TABLE_NAME
+            - DYNOCANVAS_REGIONS
+            - DYNOCANVAS_READONLY
+            - DYNOCANVAS_AUTH
+            - DYNOCANVAS_AUTH_USER
+            - DYNOCANVAS_AUTH_PASS
         restart: always
         ports:
             - 8001:3000

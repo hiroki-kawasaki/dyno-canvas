@@ -1,7 +1,7 @@
 'use client'
 
 import { useTransition } from 'react';
-import { switchEnvMode } from '@/actions/settings';
+import { switchEnvMode } from '@actions/settings';
 
 interface Props {
     currentMode: 'aws' | 'local';

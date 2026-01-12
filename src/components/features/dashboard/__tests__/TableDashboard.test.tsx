@@ -1,19 +1,17 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import TableDashboard from '@/components/features/dashboard/TableDashboard';
+import TableDashboard from '@components/features/dashboard/TableDashboard';
 import { UIProvider } from '@/contexts/UIContext';
-import * as dynamoActions from '@/actions/dynamo';
+import * as dynamoActions from '@actions/dynamodb';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 
-// Mock Next.js hooks
 jest.mock('next/navigation', () => ({
     useRouter: jest.fn(),
     useSearchParams: jest.fn(),
     usePathname: jest.fn(),
 }));
 
-// Mock Actions
-jest.mock('@/actions/dynamo', () => ({
+jest.mock('@actions/dynamodb', () => ({
     searchItems: jest.fn(),
     getAccessPatterns: jest.fn(),
     deleteItem: jest.fn(),
@@ -43,7 +41,7 @@ describe('TableDashboard Component', () => {
 
     const renderWithContext = (component: React.ReactNode) => {
         return render(
-            <UIProvider allowDelete={true}>
+            <UIProvider>
                 {component}
             </UIProvider>
         );
@@ -90,7 +88,6 @@ describe('TableDashboard Component', () => {
 
         renderWithContext(<TableDashboard tableName="TestTable" mode="free" adminTableExists={true} />);
 
-        // Wait for search result
         const pkInput = screen.getByPlaceholderText('e.g. USER#123');
         fireEvent.change(pkInput, { target: { value: 'A' } });
         fireEvent.click(screen.getByText('Search'));
@@ -100,9 +97,6 @@ describe('TableDashboard Component', () => {
         const deleteButton = screen.getByTitle('Delete');
         fireEvent.click(deleteButton);
 
-        // Confirm dialog comes from UIContext context. 
-        // We'll inspect if deleteItem is called after confirming.
-        // Assuming the Confirm modal text is "Confirm"
         const confirmBtn = await screen.findByText('Confirm', { selector: 'button' });
 
         (dynamoActions.deleteItem as jest.Mock).mockResolvedValue({ success: true });
@@ -119,12 +113,27 @@ describe('TableDashboard Component', () => {
         const pkInput = screen.getByPlaceholderText('e.g. USER#123');
         fireEvent.change(pkInput, { target: { value: 'KEY' } });
 
-        // Simulating form submit
         const form = screen.getByRole('button', { name: 'Search' }).closest('form');
         fireEvent.submit(form!);
 
         await waitFor(() => {
             expect(mockPush).toHaveBeenCalledWith(expect.stringContaining('pk=KEY'));
         });
+    });
+    it('hides actions in read-only mode', async () => {
+        (dynamoActions.searchItems as jest.Mock).mockResolvedValue({
+            success: true,
+            data: [{ PK: 'A', SK: 'B' }]
+        });
+
+        renderWithContext(<TableDashboard tableName="TestTable" mode="free" adminTableExists={true} readOnly={true} />);
+
+        fireEvent.change(screen.getByPlaceholderText('e.g. USER#123'), { target: { value: 'A' } });
+        fireEvent.click(screen.getByText('Search'));
+
+        await waitFor(() => screen.getByText('A'));
+
+        expect(screen.queryByTitle('Delete')).not.toBeInTheDocument();
+        expect(screen.queryByText('Import')).not.toBeInTheDocument();
     });
 });

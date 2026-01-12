@@ -6,33 +6,33 @@ import {
     DynamoDBDocumentClient,
     PutCommand,
     BatchWriteCommand,
+    UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
 import {
     ListTablesCommand,
     CreateTableCommand,
     DeleteTableCommand,
+    UpdateTableCommand,
     CreateTableCommandInput,
+    DescribeTableCommand,
 } from '@aws-sdk/client-dynamodb';
-import * as dynamoActions from '@/actions/dynamo';
+import * as dynamoActions from '@actions/dynamodb';
 
-// Mock getSettings
-jest.mock('@/actions/settings', () => ({
+jest.mock('@actions/settings', () => ({
     getSettings: jest.fn().mockResolvedValue({ mode: 'aws', region: 'us-east-1' }),
 }));
 
-// Mock next/cache
 jest.mock('next/cache', () => ({
     revalidatePath: jest.fn(),
 }));
 
-// Mock Admin Actions
-jest.mock('@/actions/admin', () => ({
+jest.mock('@actions/admin', () => ({
     getAccessPatternsForTable: jest.fn(),
     saveAccessPattern: jest.fn(),
     deleteAccessPattern: jest.fn(),
 }));
 
-import * as adminActions from '@/actions/admin';
+import * as adminActions from '@actions/admin';
 
 const ddbMock = mockClient(DynamoDBDocumentClient);
 
@@ -40,6 +40,29 @@ describe('DynamoDB Actions', () => {
     beforeEach(() => {
         ddbMock.reset();
         jest.clearAllMocks();
+        ddbMock.on(DescribeTableCommand).resolves({
+            Table: {
+                TableName: 'TestTable',
+                KeySchema: [
+                    { AttributeName: 'PK', KeyType: 'HASH' },
+                    { AttributeName: 'SK', KeyType: 'RANGE' }
+                ],
+                AttributeDefinitions: [
+                    { AttributeName: 'PK', AttributeType: 'S' },
+                    { AttributeName: 'SK', AttributeType: 'S' }
+                ],
+                GlobalSecondaryIndexes: [
+                    {
+                        IndexName: 'Index1',
+                        KeySchema: [
+                            { AttributeName: 'GSI1PK', KeyType: 'HASH' },
+                            { AttributeName: 'GSI1SK', KeyType: 'RANGE' }
+                        ],
+                        Projection: { ProjectionType: 'ALL' },
+                    }
+                ]
+            }
+        });
     });
 
     describe('Table Operations', () => {
@@ -47,6 +70,12 @@ describe('DynamoDB Actions', () => {
             ddbMock.on(ListTablesCommand).resolves({ TableNames: ['Table1', 'Table2'] });
             const result = await dynamoActions.listTables();
             expect(result).toEqual(['Table1', 'Table2']);
+        });
+
+        it('listTables should throw error on failure', async () => {
+            const error = new Error('Auth Error');
+            ddbMock.on(ListTablesCommand).rejects(error);
+            await expect(dynamoActions.listTables()).rejects.toThrow('Auth Error');
         });
 
         it('createTable should send CreateTableCommand', async () => {
@@ -59,36 +88,53 @@ describe('DynamoDB Actions', () => {
         });
 
         it('deleteTable should send DeleteTableCommand', async () => {
-            // Mock local to allow deletion
-            (require('@/actions/settings').getSettings as jest.Mock).mockResolvedValue({ mode: 'local', region: 'local' }); // eslint-disable-line @typescript-eslint/no-require-imports
+            (require('@actions/settings').getSettings as jest.Mock).mockResolvedValue({ mode: 'local', region: 'local' }); // eslint-disable-line @typescript-eslint/no-require-imports
 
             ddbMock.on(DeleteTableCommand).resolves({});
             const result = await dynamoActions.deleteTable('OldTable');
             expect(result.success).toBe(true);
             expect(ddbMock.calls()).toHaveLength(1);
 
-            // Reset mock
-            (require('@/actions/settings').getSettings as jest.Mock).mockResolvedValue({ mode: 'aws', region: 'us-east-1' }); // eslint-disable-line @typescript-eslint/no-require-imports
+            (require('@actions/settings').getSettings as jest.Mock).mockResolvedValue({ mode: 'aws', region: 'us-east-1' }); // eslint-disable-line @typescript-eslint/no-require-imports
         });
 
-        // ... inside Item CRUD
         it('createItem should handle overwrite error', async () => {
             ddbMock.on(PutCommand).rejects({ name: 'ConditionalCheckFailedException' });
             const item = { PK: 'A', SK: 'B' };
-            const result = await dynamoActions.createItem('T', item);
+            const result = await dynamoActions.createItem('TestTable', item);
             expect(result.success).toBe(false);
             expect(result.error).toBe("Item already exists or condition failed.");
         });
 
-        // ... inside GSI
-        it('deleteGSI should fail if not local (mocked as aws)', async () => {
-            // Default mock is AWS
-            const result = await dynamoActions.deleteGSI('T', 'Index1');
-            expect(result.success).toBe(false);
-            expect(result.error).toContain('is not allowed in this environment');
+        it('updateItem should send UpdateCommand with correct expression', async () => {
+            ddbMock.on(UpdateCommand).resolves({});
+            const item = { PK: 'A', SK: 'B', Name: 'NewName', Age: 30 };
+            const result = await dynamoActions.updateItem('TestTable', item);
+            expect(result.success).toBe(true);
+            expect(ddbMock.calls()).toHaveLength(2);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const input = ddbMock.call(1).args[0].input as any;
+            expect(input.TableName).toBe('TestTable');
+            expect(input.Key).toEqual({ PK: 'A', SK: 'B' });
+            expect(input.UpdateExpression).toContain('SET');
+            expect(Object.keys(input.ExpressionAttributeNames)).toHaveLength(2);
+            expect(Object.keys(input.ExpressionAttributeValues)).toHaveLength(2);
         });
 
-        // ... inside Export/Import
+        it('updateItem should return message if no attributes to update', async () => {
+            const item = { PK: 'A', SK: 'B' };
+            const result = await dynamoActions.updateItem('TestTable', item);
+            expect(result.success).toBe(true);
+            expect(result.message).toBe("No attributes to update.");
+            expect(ddbMock.calls()).toHaveLength(1);
+        });
+
+        it('deleteGSI should succeed even if not local', async () => {
+            ddbMock.on(UpdateTableCommand).resolves({});
+            const result = await dynamoActions.deleteGSI('TestTable', 'Index1');
+            expect(result.success).toBe(true);
+        });
+
         it('importItems should parse JSONL and batch write', async () => {
             ddbMock.on(BatchWriteCommand).resolves({});
             const lines = '{"Item":{"PK":{"S":"A"},"SK":{"S":"B"}}}\n{"Item":{"PK":{"S":"C"},"SK":{"S":"D"}}}';
@@ -99,7 +145,7 @@ describe('DynamoDB Actions', () => {
                 get: jest.fn().mockReturnValue(mockFile)
             } as unknown as FormData;
 
-            const result = await dynamoActions.importItems('T', formData);
+            const result = await dynamoActions.importItems('TestTable', formData);
             expect(result.success).toBe(true);
             expect(result.count).toBe(2);
             expect(ddbMock.calls()).toHaveLength(1);
@@ -107,17 +153,16 @@ describe('DynamoDB Actions', () => {
 
         it('importItems should handle chunking', async () => {
             ddbMock.on(BatchWriteCommand).resolves({});
-            // 30 lines
             const lines = Array.from({ length: 30 }, (_, i) => `{"Item":{"PK":{"S":"P${i}"},"SK":{"S":"S${i}"}}}`).join('\n');
             const mockFile = {
                 stream: () => new Blob([lines]).stream()
             } as unknown as File;
             const formData = { get: jest.fn().mockReturnValue(mockFile) } as unknown as FormData;
 
-            const result = await dynamoActions.importItems('T', formData);
+            const result = await dynamoActions.importItems('TestTable', formData);
             expect(result.success).toBe(true);
             expect(result.count).toBe(30);
-            expect(ddbMock.calls()).toHaveLength(2); // 25 + 5
+            expect(ddbMock.calls()).toHaveLength(2);
         });
 
         it('importAccessPatterns should save each pattern', async () => {
@@ -129,20 +174,20 @@ describe('DynamoDB Actions', () => {
 
             (adminActions.saveAccessPattern as jest.Mock).mockResolvedValue({ success: true });
 
-            const result = await dynamoActions.importAccessPatterns('T', formData);
+            const result = await dynamoActions.importAccessPatterns('TestTable', formData);
             expect(result.success).toBe(true);
             expect(result.count).toBe(1);
             expect(adminActions.saveAccessPattern).toHaveBeenCalled();
         });
 
         it('importAccessPatterns should return error on invalid content', async () => {
-            const lines = '{"Item":{"AccessPatternId":{"S":"id1"}}}'; // Missing Label and PKFormat
+            const lines = '{"Item":{"AccessPatternId":{"S":"id1"}}}';
             const mockFile = {
                 stream: () => new Blob([lines]).stream()
             } as unknown as File;
             const formData = { get: jest.fn().mockReturnValue(mockFile) } as unknown as FormData;
 
-            const result = await dynamoActions.importAccessPatterns('T', formData);
+            const result = await dynamoActions.importAccessPatterns('TestTable', formData);
             expect(result.success).toBe(false);
             expect(result.error).toContain('Errors:');
         });

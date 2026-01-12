@@ -28,4 +28,10 @@ export const AVAILABLE_REGIONS = availableRegions;
 export const IS_LOCAL_AVAILABLE = availableRegions.includes('local');
 export const DEFAULT_REGION = availableRegions[0];
 
-export const ALLOW_DELETE_TABLE = process.env.DYNOCANVAS_ALLOW_DELETE_TABLE === 'true';
+export const getReadOnly = () => process.env.DYNOCANVAS_READONLY === 'true';
+
+export const AUTH_CONFIG = {
+    mode: process.env.DYNOCANVAS_AUTH || 'none',
+    user: process.env.DYNOCANVAS_AUTH_USER || 'admin',
+    pass: process.env.DYNOCANVAS_AUTH_PASS || 'dynocanvas'
+};

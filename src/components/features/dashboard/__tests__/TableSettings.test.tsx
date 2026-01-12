@@ -1,12 +1,10 @@
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import TableSettings from '@/components/features/dashboard/TableSettings';
+import TableSettings from '@components/features/dashboard/TableSettings';
 import { UIProvider } from '@/contexts/UIContext';
-import * as dynamoActions from '@/actions/dynamo';
+import * as dynamoActions from '@actions/dynamodb';
 import { AccessPatternConfig } from '@/types';
 
-// Mock Actions
-jest.mock('@/actions/dynamo', () => ({
+jest.mock('@actions/dynamodb', () => ({
     getTableDetails: jest.fn(),
     upsertAccessPattern: jest.fn(),
     deleteAccessPattern: jest.fn(),
@@ -42,6 +40,8 @@ describe('TableSettings Component', () => {
                     patterns={mockPatterns}
                     onClose={mockClose}
                     onUpdate={mockUpdate}
+                    limit={100}
+                    setLimit={jest.fn()}
                 />
             </UIProvider>
         );
@@ -50,6 +50,7 @@ describe('TableSettings Component', () => {
     it('renders and loads details', async () => {
         renderWithContext();
         expect(screen.getByText(/Table Settings/)).toBeInTheDocument();
+        fireEvent.click(screen.getByText('Table Details'));
         await waitFor(() => {
             expect(dynamoActions.getTableDetails).toHaveBeenCalledWith('TestTable');
         });
@@ -58,21 +59,16 @@ describe('TableSettings Component', () => {
     it('manages access patterns', async () => {
         renderWithContext();
 
-        // Switch to patterns tab
         fireEvent.click(screen.getByText('Access Patterns'));
 
-        // Check list
         expect(screen.getByText('Pattern 1')).toBeInTheDocument();
 
-        // Create new
         fireEvent.click(screen.getByText('New Pattern'));
 
-        // Fill form
         fireEvent.change(screen.getByPlaceholderText('unique-id'), { target: { value: 'new-p' } });
         fireEvent.change(screen.getByPlaceholderText('Label'), { target: { value: 'New Label' } });
         fireEvent.change(screen.getByPlaceholderText('PREFIX#{userId}'), { target: { value: 'PK' } });
 
-        // Save
         (dynamoActions.upsertAccessPattern as jest.Mock).mockResolvedValue({ success: true });
         fireEvent.click(screen.getByText('Save'));
 
@@ -95,14 +91,12 @@ describe('TableSettings Component', () => {
 
         renderWithContext();
 
+        fireEvent.click(screen.getByText('Table Details'));
         await waitFor(() => screen.getByText('GSI1'));
 
-        // Delete button
-        // Find by title which comes from i18n
         const deleteBtn = screen.getByTitle('Delete GSI');
         fireEvent.click(deleteBtn);
 
-        // Confirm
         const confirmBtn = await screen.findByText('Confirm', { selector: 'button' });
         (dynamoActions.deleteGSI as jest.Mock).mockResolvedValue({ success: true });
         fireEvent.click(confirmBtn);
@@ -114,15 +108,14 @@ describe('TableSettings Component', () => {
 
     it('toggles TTL', async () => {
         renderWithContext();
+        fireEvent.click(screen.getByText('Table Details'));
         await waitFor(() => screen.getByText('Enable TTL'));
 
         fireEvent.click(screen.getByText('Enable TTL'));
 
-        // Modal opens
         const input = screen.getByPlaceholderText('expireAt');
         fireEvent.change(input, { target: { value: 'ttl' } });
 
-        // The modal button is the second "Enable TTL" in the DOM
         const enableButtons = await screen.findAllByText('Enable TTL');
         const submitBtn = enableButtons[enableButtons.length - 1];
 

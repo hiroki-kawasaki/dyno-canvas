@@ -1,10 +1,8 @@
-import React from 'react';
 import { render, screen } from '@testing-library/react';
-import Sidebar from '@/components/layout/Sidebar';
+import Sidebar from '@components/layout/Sidebar';
 import { UIProvider } from '@/contexts/UIContext';
 import { usePathname } from 'next/navigation';
 
-// Mock Next.js hooks
 jest.mock('next/navigation', () => ({
     usePathname: jest.fn(),
 }));
@@ -36,7 +34,7 @@ describe('Sidebar Component', () => {
         renderWithContext();
 
         const tableLink = screen.getByRole('link', { name: /Table List/ });
-        expect(tableLink).toHaveClass('bg-blue-50'); // Active class
+        expect(tableLink).toHaveClass('bg-blue-50');
 
         const dashboardLink = screen.getByRole('link', { name: /Dashboard/ });
         expect(dashboardLink).not.toHaveClass('bg-blue-50');

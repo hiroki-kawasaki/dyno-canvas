@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createTable } from '@/actions/dynamo';
+import { createTable } from '@actions/dynamodb';
 import { useUI } from '@/contexts/UIContext';
 
 export default function CreateTableModal() {
