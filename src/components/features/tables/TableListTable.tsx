@@ -11,7 +11,7 @@ interface TableListTableProps {
     mode: EnvMode;
     adminTableName?: string;
     showActions?: boolean;
-    readOnly?: boolean;
+    readOnly: boolean;
 }
 
 export default function TableListTable({
@@ -19,7 +19,7 @@ export default function TableListTable({
     mode,
     adminTableName = "dyno-canvas",
     showActions = true,
-    readOnly = false
+    readOnly
 }: TableListTableProps) {
     const { t, confirm, showToast } = useUI();
     const router = useRouter();

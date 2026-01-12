@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function proxy(request: NextRequest) {
-    const authMode = process.env.DYNOCANVAS_AUTH || 'none';
+    const authMode = process.env.DYNOCANVAS_AUTH || 'basic';
 
     if (authMode === 'none') {
         return NextResponse.next();

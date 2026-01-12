@@ -64,7 +64,7 @@ export async function switchProfile(profile: string) {
         cookieStore.set('db-region', targetRegion, { path: '/' });
     }
 
-    revalidatePath('/');
+    revalidatePath('/', 'layout');
 }
 
 export async function switchRegion(region: string) {
@@ -78,13 +78,13 @@ export async function switchRegion(region: string) {
         cookieStore.set('db-mode', 'aws', { path: '/' });
         cookieStore.set('db-region', region, { path: '/' });
     }
-    revalidatePath('/');
+    revalidatePath('/', 'layout');
 }
 
 export async function switchLanguage(lang: Language) {
     const cookieStore = await cookies();
     cookieStore.set('db-language', lang, { path: '/' });
-    revalidatePath('/');
+    revalidatePath('/', 'layout');
 }
 
 export async function getSettings() {

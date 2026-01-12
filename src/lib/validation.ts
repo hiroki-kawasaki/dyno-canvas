@@ -22,10 +22,7 @@ const idSchema = z.string()
 
 export const tableNameSchema = nameSchema;
 
-export const dynamoItemSchema = z.looseObject({
-    PK: z.string().min(1, "PK is required"),
-    SK: z.string(),
-});
+export const dynamoItemSchema = z.record(z.string(), z.unknown());
 
 export const accessPatternConfigSchema = z.object({
     id: idSchema,

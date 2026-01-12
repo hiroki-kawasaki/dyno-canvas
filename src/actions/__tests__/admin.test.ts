@@ -16,7 +16,10 @@ import {
     PutItemCommandInput,
     DeleteItemCommandInput
 } from '@aws-sdk/client-dynamodb';
-import { GetCallerIdentityCommand, STSClient } from '@aws-sdk/client-sts';
+import {
+    GetCallerIdentityCommand,
+    STSClient
+} from '@aws-sdk/client-sts';
 import * as adminActions from '@actions/admin';
 import { AccessPatternConfig } from '@/types';
 
@@ -48,6 +51,12 @@ describe('Admin Actions', () => {
         ddbMock.on(ListTablesCommand).resolves({ TableNames: ['OtherTable'] });
         const result = await adminActions.checkAdminTableExists();
         expect(result).toBe(false);
+    });
+
+    it('checkAdminTableExists should throw error on failure', async () => {
+        const error = new Error('Auth Error');
+        ddbMock.on(ListTablesCommand).rejects(error);
+        await expect(adminActions.checkAdminTableExists()).rejects.toThrow('Auth Error');
     });
 
     it('createAdminTable should send CreateTableCommand', async () => {

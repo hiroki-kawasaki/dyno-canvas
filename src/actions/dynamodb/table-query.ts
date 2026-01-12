@@ -25,7 +25,7 @@ export async function listTables(): Promise<string[]> {
         return data.TableNames || [];
     } catch (error) {
         logger.error({ err: error }, "Failed to list tables");
-        return [];
+        throw error;
     }
 }
 

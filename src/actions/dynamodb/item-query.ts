@@ -15,7 +15,8 @@ import {
 import {
     getClient,
     getErrorMessage,
-    buildQueryInput
+    buildQueryInput,
+    getTableKeys
 } from "./utils";
 
 export async function getItem(
@@ -25,9 +26,18 @@ export async function getItem(
 ): Promise<DynamoItem | undefined> {
     try {
         const client = await getClient();
+        const keys = await getTableKeys(tableName);
+        const pkName = keys.pkName || 'PK';
+        const skName = keys.skName || 'SK';
+
+        const Key: Record<string, string> = { [pkName]: pk };
+        if (skName) {
+            Key[skName] = sk;
+        }
+
         const data = await client.send(new GetCommand({
             TableName: tableName,
-            Key: { PK: pk, SK: sk },
+            Key,
         }));
         return data.Item as DynamoItem | undefined;
     } catch (error) {
@@ -40,7 +50,7 @@ export async function searchItems(params: SearchParams): Promise<SearchResponse>
     try {
         const validated = searchParamsSchema.parse(params);
         const client = await getClient();
-        const queryInput = buildQueryInput(validated);
+        const queryInput = await buildQueryInput(validated);
         const res = await client.send(new QueryCommand(queryInput));
         return {
             success: true,
@@ -58,7 +68,7 @@ export async function getSearchCount(params: SearchParams) {
     try {
         const validated = searchParamsSchema.parse(params);
         const client = await getClient();
-        const queryInput = buildQueryInput(validated);
+        const queryInput = await buildQueryInput(validated);
 
         queryInput.Select = 'COUNT';
         delete queryInput.Limit;
@@ -89,7 +99,10 @@ export async function exportAllItems(
         const validated = searchParamsSchema.parse(params);
         const client = await getClient();
 
-        const queryInput = buildQueryInput(validated);
+        const queryInput = await buildQueryInput(validated);
+        const keys = await getTableKeys(validated.tableName);
+        const pkName = keys.pkName || 'PK';
+        const skName = keys.skName || 'SK';
 
         delete queryInput.Limit;
 
@@ -114,10 +127,12 @@ export async function exportAllItems(
             });
 
             const sortedKeys = Array.from(allKeys).sort((a, b) => {
-                if (a === 'PK') return -1;
-                if (b === 'PK') return 1;
-                if (a === 'SK') return -1;
-                if (b === 'SK') return 1;
+                if (a === pkName) return -1;
+                if (b === pkName) return 1;
+                if (skName) {
+                    if (a === skName) return -1;
+                    if (b === skName) return 1;
+                }
                 return a.localeCompare(b);
             });
 
@@ -137,6 +152,7 @@ export async function exportAllItems(
             return { success: true, data: [header, ...rows].join('\n') };
 
         } else {
+
             const lines = items.map(item => {
                 const marshalled = marshall(
                     item,

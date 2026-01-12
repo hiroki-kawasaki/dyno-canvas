@@ -5,12 +5,13 @@ import { ADMIN_TABLE_NAME } from '@lib/config';
 
 export default async function HomePage() {
     const tables = await listTables();
-    const { mode } = await getSettings();
+    const { mode, readOnly } = await getSettings();
 
     return (
         <HomeContent
             tables={tables}
             mode={mode}
+            readOnly={readOnly}
             adminTableName={ADMIN_TABLE_NAME}
         />
     );

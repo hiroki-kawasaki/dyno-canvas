@@ -1,7 +1,19 @@
-import { switchEnvMode, switchRegion, switchLanguage, switchProfile, getSettings, getSystemStatus, getAvailableProfiles } from '../settings';
+import {
+    switchEnvMode,
+    switchRegion,
+    switchLanguage,
+    switchProfile,
+    getSettings,
+    getSystemStatus,
+    getAvailableProfiles
+} from '../settings';
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
-import { AVAILABLE_REGIONS, IS_LOCAL_AVAILABLE, DEFAULT_REGION } from '@lib/config';
+import {
+    AVAILABLE_REGIONS,
+    IS_LOCAL_AVAILABLE,
+    DEFAULT_REGION
+} from '@lib/config';
 import { promises as fs } from 'fs';
 
 jest.mock('next/headers', () => ({
@@ -71,7 +83,7 @@ aws_secret_access_key = B
             if (IS_LOCAL_AVAILABLE) {
                 expect(mockCookieStore.set).toHaveBeenCalledWith('db-mode', 'local', { path: '/' });
                 expect(mockCookieStore.set).toHaveBeenCalledWith('db-region', 'local', { path: '/' });
-                expect(revalidatePath).toHaveBeenCalledWith('/');
+                expect(revalidatePath).toHaveBeenCalledWith('/', 'layout');
             }
         });
 
@@ -81,7 +93,7 @@ aws_secret_access_key = B
 
             expect(mockCookieStore.set).toHaveBeenCalledWith('db-mode', 'aws', { path: '/' });
             expect(mockCookieStore.set).toHaveBeenCalledWith('db-region', targetRegion, { path: '/' });
-            expect(revalidatePath).toHaveBeenCalledWith('/');
+            expect(revalidatePath).toHaveBeenCalledWith('/', 'layout');
         });
     });
 
@@ -107,7 +119,7 @@ aws_secret_access_key = B
             await switchProfile('prod');
             expect(mockCookieStore.set).toHaveBeenCalledWith('db-mode', 'aws', { path: '/' });
             expect(mockCookieStore.set).toHaveBeenCalledWith('db-profile', 'prod', { path: '/' });
-            expect(revalidatePath).toHaveBeenCalledWith('/');
+            expect(revalidatePath).toHaveBeenCalledWith('/', 'layout');
         });
 
         it('should reset region if currently local', async () => {
@@ -127,7 +139,7 @@ aws_secret_access_key = B
         it('should set language cookie', async () => {
             await switchLanguage('ja');
             expect(mockCookieStore.set).toHaveBeenCalledWith('db-language', 'ja', { path: '/' });
-            expect(revalidatePath).toHaveBeenCalledWith('/');
+            expect(revalidatePath).toHaveBeenCalledWith('/', 'layout');
         });
     });
 

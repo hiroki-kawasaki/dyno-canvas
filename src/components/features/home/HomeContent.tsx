@@ -12,12 +12,14 @@ interface HomeContentProps {
     tables: string[];
     mode: EnvMode;
     adminTableName?: string;
+    readOnly: boolean;
 }
 
 export default function HomeContent({
     tables,
     mode,
-    adminTableName = "dyno-canvas"
+    adminTableName = "dyno-canvas",
+    readOnly
 }: HomeContentProps) {
     const { t, showToast, confirm } = useUI();
     const router = useRouter();
@@ -66,7 +68,7 @@ export default function HomeContent({
                 </h1>
             </div>
 
-            {!adminTableExists && (
+            {!adminTableExists && !readOnly && (
                 <div className="bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 p-6 mb-8 rounded-r-lg shadow-sm">
                     <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
                         <div className="flex items-center">
@@ -96,9 +98,9 @@ export default function HomeContent({
                 <h2 className="text-xl font-bold text-gray-700 dark:text-gray-200">
                     {t.tables.title}
                 </h2>
-                <CreateTableModal />
+                {!readOnly && <CreateTableModal />}
             </div>
-            <TableListTable tables={tables} mode={mode} adminTableName={adminTableName} />
-        </main>
+            <TableListTable tables={tables} mode={mode} adminTableName={adminTableName} readOnly={readOnly} />
+        </main >
     );
 }

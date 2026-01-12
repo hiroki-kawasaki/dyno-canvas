@@ -14,6 +14,7 @@ import {
     DeleteTableCommand,
     UpdateTableCommand,
     CreateTableCommandInput,
+    DescribeTableCommand,
 } from '@aws-sdk/client-dynamodb';
 import * as dynamoActions from '@actions/dynamodb';
 
@@ -39,6 +40,29 @@ describe('DynamoDB Actions', () => {
     beforeEach(() => {
         ddbMock.reset();
         jest.clearAllMocks();
+        ddbMock.on(DescribeTableCommand).resolves({
+            Table: {
+                TableName: 'TestTable',
+                KeySchema: [
+                    { AttributeName: 'PK', KeyType: 'HASH' },
+                    { AttributeName: 'SK', KeyType: 'RANGE' }
+                ],
+                AttributeDefinitions: [
+                    { AttributeName: 'PK', AttributeType: 'S' },
+                    { AttributeName: 'SK', AttributeType: 'S' }
+                ],
+                GlobalSecondaryIndexes: [
+                    {
+                        IndexName: 'Index1',
+                        KeySchema: [
+                            { AttributeName: 'GSI1PK', KeyType: 'HASH' },
+                            { AttributeName: 'GSI1SK', KeyType: 'RANGE' }
+                        ],
+                        Projection: { ProjectionType: 'ALL' },
+                    }
+                ]
+            }
+        });
     });
 
     describe('Table Operations', () => {
@@ -46,6 +70,12 @@ describe('DynamoDB Actions', () => {
             ddbMock.on(ListTablesCommand).resolves({ TableNames: ['Table1', 'Table2'] });
             const result = await dynamoActions.listTables();
             expect(result).toEqual(['Table1', 'Table2']);
+        });
+
+        it('listTables should throw error on failure', async () => {
+            const error = new Error('Auth Error');
+            ddbMock.on(ListTablesCommand).rejects(error);
+            await expect(dynamoActions.listTables()).rejects.toThrow('Auth Error');
         });
 
         it('createTable should send CreateTableCommand', async () => {
@@ -81,9 +111,9 @@ describe('DynamoDB Actions', () => {
             const item = { PK: 'A', SK: 'B', Name: 'NewName', Age: 30 };
             const result = await dynamoActions.updateItem('TestTable', item);
             expect(result.success).toBe(true);
-            expect(ddbMock.calls()).toHaveLength(1);
+            expect(ddbMock.calls()).toHaveLength(2);
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const input = ddbMock.call(0).args[0].input as any;
+            const input = ddbMock.call(1).args[0].input as any;
             expect(input.TableName).toBe('TestTable');
             expect(input.Key).toEqual({ PK: 'A', SK: 'B' });
             expect(input.UpdateExpression).toContain('SET');
@@ -96,7 +126,7 @@ describe('DynamoDB Actions', () => {
             const result = await dynamoActions.updateItem('TestTable', item);
             expect(result.success).toBe(true);
             expect(result.message).toBe("No attributes to update.");
-            expect(ddbMock.calls()).toHaveLength(0);
+            expect(ddbMock.calls()).toHaveLength(1);
         });
 
         it('deleteGSI should succeed even if not local', async () => {

@@ -1,4 +1,5 @@
 import { QueryCommandInput } from "@aws-sdk/lib-dynamodb";
+import { DescribeTableCommand } from "@aws-sdk/client-dynamodb";
 import { getSettings } from "@actions/settings";
 import { getDynamoClient } from "@lib/dynamodb";
 import { SearchParams } from "@/types";
@@ -23,6 +24,27 @@ export function getErrorMessage(error: unknown): string {
 export async function getClient() {
     const { mode, region, currentProfile } = await getSettings();
     return getDynamoClient(mode === 'local', region, currentProfile);
+}
+
+export async function getTableKeys(tableName: string, indexName?: string) {
+    const client = await getClient();
+    const { Table } = await client.send(new DescribeTableCommand({ TableName: tableName }));
+
+    if (!Table) throw new Error("Table not found");
+
+    let keySchema = Table.KeySchema;
+
+    if (indexName && Table.GlobalSecondaryIndexes) {
+        const gsi = Table.GlobalSecondaryIndexes.find(idx => idx.IndexName === indexName);
+        if (gsi) {
+            keySchema = gsi.KeySchema;
+        }
+    }
+
+    const pkName = keySchema?.find(k => k.KeyType === 'HASH')?.AttributeName;
+    const skName = keySchema?.find(k => k.KeyType === 'RANGE')?.AttributeName;
+
+    return { pkName, skName };
 }
 
 export function buildKeyFromFormat(
@@ -68,7 +90,7 @@ export function buildKeyFromFormat(
     return result;
 }
 
-export function buildQueryInput(params: SearchParams): QueryCommandInput {
+export async function buildQueryInput(params: SearchParams): Promise<QueryCommandInput> {
     const queryInput: QueryCommandInput = {
         TableName: params.tableName,
         Limit: params.limit || 100,
@@ -85,8 +107,9 @@ export function buildQueryInput(params: SearchParams): QueryCommandInput {
             queryInput.IndexName = params.indexName;
         }
 
-        const pkName = params.pkName || (params.indexName ? 'GSI1PK' : 'PK');
-        const skName = params.skName || (params.indexName ? 'GSI1SK' : 'SK');
+        const keys = await getTableKeys(params.tableName, params.indexName);
+        const pkName = keys.pkName || (params.indexName ? 'GSI1PK' : 'PK');
+        const skName = keys.skName || (params.indexName ? 'GSI1SK' : 'SK');
 
         queryInput.KeyConditionExpression = `${pkName} = :pk`;
         queryInput.ExpressionAttributeValues = { ':pk': params.pkInput };
@@ -114,8 +137,9 @@ export function buildQueryInput(params: SearchParams): QueryCommandInput {
             fullSk = buildKeyFromFormat(pattern.skFormat, params.patternParams, false);
         }
 
-        const pkName = params.pkName || (pattern.indexName ? 'GSI1PK' : 'PK');
-        const skName = params.skName || (pattern.indexName ? 'GSI1SK' : 'SK');
+        const keys = await getTableKeys(params.tableName, pattern.indexName);
+        const pkName = keys.pkName || (pattern.indexName ? 'GSI1PK' : 'PK');
+        const skName = keys.skName || (pattern.indexName ? 'GSI1SK' : 'SK');
 
         queryInput.KeyConditionExpression = `${pkName} = :pk`;
         queryInput.ExpressionAttributeValues = { ':pk': fullPk };

@@ -17,8 +17,14 @@ import {
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import { getSettings } from "@actions/settings";
 import { getDynamoClient } from "@lib/dynamodb";
-import { ADMIN_TABLE_NAME, DYNOCANVAS_ENV_NAME } from "@lib/config";
-import { AccessPatternDoc, AccessPatternConfig } from "@/types";
+import {
+    ADMIN_TABLE_NAME,
+    DYNOCANVAS_ENV_NAME
+} from "@lib/config";
+import {
+    AccessPatternDoc,
+    AccessPatternConfig
+} from "@/types";
 
 async function getAccountId(mode: 'local' | 'aws', region?: string): Promise<string> {
     if (mode === 'local') {
@@ -44,7 +50,7 @@ export async function checkAdminTableExists(region?: string): Promise<boolean> {
         return (data.TableNames || []).includes(ADMIN_TABLE_NAME);
     } catch (error) {
         console.error("Failed to list tables for checking admin table:", error);
-        return false;
+        throw error;
     }
 }
 
