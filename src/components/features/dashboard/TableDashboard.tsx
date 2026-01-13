@@ -267,16 +267,14 @@ export default function TableDashboard({
                 <p className="mb-2">{t.dashboard.deleteItemConfirm}</p>
                 <div className="border rounded overflow-hidden">
                     <table className="w-full text-sm">
-                        <thead className="bg-gray-50 dark:bg-gray-700">
-                            <tr>
-                                <th className="p-2 border-b dark:border-gray-600 font-mono">PK</th>
-                                <th className="p-2 border-b dark:border-gray-600 font-mono">SK</th>
-                            </tr>
-                        </thead>
                         <tbody>
+                            <tr className="border-b dark:border-gray-600">
+                                <th className="p-2 bg-gray-50 dark:bg-gray-700 font-mono w-16 text-left border-r dark:border-gray-600">PK</th>
+                                <td className="p-2 font-mono">{pk}</td>
+                            </tr>
                             <tr>
-                                <td className="p-2 border-r dark:border-gray-600 font-mono text-center">{pk}</td>
-                                <td className="p-2 font-mono text-center">{sk}</td>
+                                <th className="p-2 bg-gray-50 dark:bg-gray-700 font-mono w-16 text-left border-r dark:border-gray-600">SK</th>
+                                <td className="p-2 font-mono">{sk}</td>
                             </tr>
                         </tbody>
                     </table>

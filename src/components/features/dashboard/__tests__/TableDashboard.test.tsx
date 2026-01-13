@@ -136,4 +136,41 @@ describe('TableDashboard Component', () => {
         expect(screen.queryByTitle('Delete')).not.toBeInTheDocument();
         expect(screen.queryByText('Import')).not.toBeInTheDocument();
     });
+
+    it('displays delete confirmation with vertical PK/SK layout', async () => {
+        (dynamoActions.searchItems as jest.Mock).mockResolvedValue({
+            success: true,
+            data: [{ PK: 'VAL_PK', SK: 'VAL_SK' }]
+        });
+
+        renderWithContext(<TableDashboard tableName="TestTable" mode="free" adminTableExists={true} />);
+
+        const pkInput = screen.getByPlaceholderText('e.g. USER#123');
+        fireEvent.change(pkInput, { target: { value: 'VAL_PK' } });
+        fireEvent.click(screen.getByText('Search'));
+
+        await waitFor(() => screen.getByText('VAL_PK'));
+
+        const deleteButton = screen.getByTitle('Delete');
+        fireEvent.click(deleteButton);
+
+        const confirmBtn = await screen.findByText('Confirm', { selector: 'button' });
+        expect(confirmBtn).toBeInTheDocument();
+
+        const rows = screen.getAllByRole('row');
+
+        const pkRow = rows.find(row =>
+            row.children.length === 2 &&
+            row.children[0].textContent === 'PK' &&
+            row.children[1].textContent === 'VAL_PK'
+        );
+        expect(pkRow).toBeTruthy();
+
+        const skRow = rows.find(row =>
+            row.children.length === 2 &&
+            row.children[0].textContent === 'SK' &&
+            row.children[1].textContent === 'VAL_SK'
+        );
+        expect(skRow).toBeTruthy();
+    });
 });
