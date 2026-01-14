@@ -34,6 +34,9 @@ import {
     SearchParams
 } from '@/types';
 import TableSettings from './TableSettings';
+import SearchForm from './SearchForm';
+import ActionMenu from './ActionMenu';
+import ResultsTable from './ResultsTable';
 
 interface TableDashboardProps {
     tableName: string;
@@ -250,17 +253,6 @@ export default function TableDashboard({
         executeSearch(pageKeys[newPage]);
     };
 
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            const target = event.target as HTMLElement;
-            if (isActionsOpen && !target.closest(`#${ACTION_DROPDOWN_ID}`)) {
-                setIsActionsOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [isActionsOpen]);
-
     const handleDeleteItem = async (pk: string, sk: string) => {
         const message = (
             <div>
@@ -448,14 +440,6 @@ export default function TableDashboard({
 
     const selectedList = Array.from(selectedKeys).map(k => JSON.parse(k) as { PK: string, SK: string });
 
-    const getDisplayAttributes = (item: DynamoItem) => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { PK, SK, ...rest } = item;
-        const marshalled = marshall(rest, { removeUndefinedValues: true, convertClassInstanceToMap: false });
-        return JSON.stringify(marshalled);
-    };
-
-    const showSearchControls = mode === 'free' || (mode === 'pattern' && !!currentPattern);
 
     return (
         <div className="flex flex-col gap-6 h-full relative">
@@ -504,59 +488,17 @@ export default function TableDashboard({
                     </div>
 
                     <div className="flex gap-2 relative">
-                        <div className="relative" id={ACTION_DROPDOWN_ID}>
-                            <button
-                                onClick={() => setIsActionsOpen(!isActionsOpen)}
-                                className="text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 px-3 py-2 rounded font-medium flex items-center gap-1 transition-colors shadow-sm"
-                            >
-                                {t.tables.actions}
-                                <span className="material-symbols-outlined text-[18px]">arrow_drop_down</span>
-                            </button>
-
-                            {isActionsOpen && (
-                                <div className="absolute right-0 mt-1 w-70 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-lg z-50 text-sm py-1 animate-fade-in-up">
-                                    {!readOnly && (
-                                        <button
-                                            onClick={() => setIsBulkDeleteModalOpen(true)}
-                                            disabled={selectedKeys.size === 0}
-                                            className="w-full text-left px-4 py-2 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                                        >
-                                            {t.dashboard.bulkDelete.replace('{count}', selectedKeys.size.toString())}
-                                        </button>
-                                    )}
-                                    <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
-                                    <button
-                                        onClick={() => handleDownload('selected', 'jsonl')}
-                                        disabled={selectedKeys.size === 0}
-                                        className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        {t.dashboard.downloadSelectedJsonl}
-                                    </button>
-                                    <button
-                                        onClick={() => handleDownload('selected', 'csv')}
-                                        disabled={selectedKeys.size === 0}
-                                        className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        {t.dashboard.downloadSelectedCsv}
-                                    </button>
-                                    <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
-                                    <button
-                                        onClick={() => handleDownload('results', 'jsonl')}
-                                        disabled={results.length === 0}
-                                        className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        {t.dashboard.downloadResultsJsonl}
-                                    </button>
-                                    <button
-                                        onClick={() => handleDownload('results', 'csv')}
-                                        disabled={results.length === 0}
-                                        className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        {t.dashboard.downloadResultsCsv}
-                                    </button>
-                                </div>
-                            )}
-                        </div>
+                        <ActionMenu
+                            ACTION_DROPDOWN_ID={ACTION_DROPDOWN_ID}
+                            isActionsOpen={isActionsOpen}
+                            setIsActionsOpen={setIsActionsOpen}
+                            readOnly={readOnly}
+                            setIsBulkDeleteModalOpen={setIsBulkDeleteModalOpen}
+                            selectedKeysSize={selectedKeys.size}
+                            resultsLength={results.length}
+                            handleDownload={handleDownload}
+                            t={t}
+                        />
 
                         {adminTableExists && (
                             <button
@@ -571,213 +513,48 @@ export default function TableDashboard({
                     </div>
                 </div>
 
-                {mode === 'pattern' && patterns.length === 0 && !patternsLoading ? (
-                    <div className="flex-1 p-3 text-sm text-red-600 border border-red-200 bg-red-50 dark:bg-red-900/10 dark:border-red-800 dark:text-red-400 rounded flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[18px]">warning</span>
-                        {t.dashboard.noPatterns}
-                    </div>
-                ) : (
-                    <form onSubmit={handleSearchClick} className="flex gap-4 items-end flex-wrap">
-                        {mode === 'free' ? (
-                            <>
-                                <div className="flex flex-col flex-1 min-w-[120px] max-w-[150px]">
-                                    <label className="text-xs text-gray-500 mb-1">{t.dashboard.index}</label>
-                                    <select
-                                        className="border p-2 rounded w-full dark:bg-gray-900 dark:border-gray-700 dark:text-white text-sm"
-                                        value={indexInput}
-                                        onChange={(e) => setIndexInput(e.target.value)}
-                                    >
-                                        <option value="">{t.dashboard.tableBase}</option>
-                                        {gsis.map(g => (
-                                            <option key={g.IndexName} value={g.IndexName}>{g.IndexName}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div className="flex flex-col flex-1 min-w-[200px]">
-                                    <label className="text-xs text-gray-500 mb-1">
-                                        {t.dashboard.pk}
-                                        <span className="ml-1 font-mono text-gray-400">
-                                            ({mode === 'free' && indexInput && gsis.find(g => g.IndexName === indexInput)?.KeySchema?.find(k => k.KeyType === 'HASH')?.AttributeName || 'PK'})
-                                        </span>
-                                    </label>
-                                    <input
-                                        className="border p-2 rounded w-full dark:bg-gray-900 dark:border-gray-700 dark:text-white text-sm"
-                                        placeholder="e.g. USER#123"
-                                        value={pkInput}
-                                        onChange={(e) => setPkInput(e.target.value)}
-                                        required
-                                    />
-                                </div>
-                                <div className="flex flex-col flex-1 min-w-[200px]">
-                                    <label className="text-xs text-gray-500 mb-1">
-                                        {t.dashboard.sk}
-                                        <span className="ml-1 font-mono text-gray-400">
-                                            ({mode === 'free' && indexInput && gsis.find(g => g.IndexName === indexInput)?.KeySchema?.find(k => k.KeyType === 'RANGE')?.AttributeName || 'SK'})
-                                        </span>
-                                    </label>
-                                    <input
-                                        className="border p-2 rounded w-full dark:bg-gray-900 dark:border-gray-700 dark:text-white text-sm"
-                                        placeholder="e.g. ORDER#"
-                                        value={skInput}
-                                        onChange={(e) => setSkInput(e.target.value)}
-                                    />
-                                </div>
-                            </>
-                        ) : (
-                            <>
-                                <div className="flex flex-col w-80">
-                                    <label className="text-xs text-gray-500 mb-1">{t.dashboard.selectPattern}</label>
-                                    {patternsLoading ? (
-                                        <div className="p-2 text-sm text-gray-500">{t.dashboard.patternLoading}</div>
-                                    ) : (
-                                        <select
-                                            className="border p-2 rounded w-full dark:bg-gray-900 dark:border-gray-700 dark:text-white text-sm"
-                                            value={patternId || ''}
-                                            onChange={(e) => handlePatternChange(e.target.value)}
-                                        >
-                                            <option value="" disabled>{t.dashboard.selectPattern}</option>
-                                            {patterns.map(p => (
-                                                <option key={p.id} value={p.id}>{p.label}</option>
-                                            ))}
-                                        </select>
-                                    )}
-                                </div>
-
-                                {dynamicFormFields.map(field => (
-                                    <div key={field.name} className="flex flex-col flex-1 min-w-[150px]">
-                                        <label className="text-xs text-gray-500 flex gap-1 mb-1">
-                                            {field.name}
-                                            {field.required && <span className="text-red-500">*</span>}
-                                        </label>
-                                        <input
-                                            className="border p-2 rounded w-full dark:bg-gray-900 dark:border-gray-700 dark:text-white text-sm"
-                                            placeholder={`Value`}
-                                            value={patternParams[field.name] || ''}
-                                            onChange={(e) => setPatternParams(prev => ({
-                                                ...prev,
-                                                [field.name]: e.target.value
-                                            }))}
-                                            required={field.required}
-                                        />
-                                    </div>
-                                ))}
-                            </>
-                        )}
-
-                        {showSearchControls && (
-                            <button
-                                type="submit"
-                                disabled={loading || (mode === 'pattern' && !currentPattern)}
-                                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded text-sm font-medium disabled:opacity-50 transition-colors h-[38px]"
-                            >
-                                {loading ? t.dashboard.searching : t.dashboard.search}
-                            </button>
-                        )}
-                    </form>
-                )}
-                {error && <p className="text-red-500 mt-2 text-sm">{error}</p>}
-                {currentPattern && mode === 'pattern' && (
-                    <div className="mt-2 text-xs text-gray-400 font-mono bg-gray-50 dark:bg-gray-900 p-2 rounded border border-gray-100 dark:border-gray-800">
-                        <span className="font-bold">PK:</span> {currentPattern.pkFormat} <span className="mx-2">|</span> <span className="font-bold">SK:</span> {currentPattern.skFormat || '(none)'}
-                        {currentPattern.indexName && <span className="ml-2 font-mono text-blue-600 dark:text-blue-400">[Index: {currentPattern.indexName}]</span>}
-                        {currentPattern.description && <span className="ml-2 text-gray-500">- {currentPattern.description}</span>}
-                    </div>
-                )}
+                <SearchForm
+                    mode={mode}
+                    loading={loading}
+                    error={error}
+                    t={t}
+                    indexInput={indexInput}
+                    setIndexInput={setIndexInput}
+                    pkInput={pkInput}
+                    setPkInput={setPkInput}
+                    skInput={skInput}
+                    setSkInput={setSkInput}
+                    gsis={gsis}
+                    patterns={patterns}
+                    patternId={patternId}
+                    handlePatternChange={handlePatternChange}
+                    patternParams={patternParams}
+                    setPatternParams={setPatternParams}
+                    patternsLoading={patternsLoading}
+                    currentPattern={currentPattern}
+                    dynamicFormFields={dynamicFormFields}
+                    onSearch={handleSearchClick}
+                />
             </div>
 
-            <div className="flex-grow overflow-hidden border rounded-lg bg-white dark:bg-gray-900 dark:border-gray-800 flex flex-col shadow-sm">
-
-                <div className="p-2 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 flex justify-between items-center">
-                    <span className="text-xs text-gray-500">
-                        {results.length > 0 && `${t.dashboard.page} ${page + 1} (${results.length} items)`}
-                    </span>
-                    <div className="flex gap-2">
-                        <button
-                            onClick={handlePrevPage}
-                            disabled={page === 0 || loading}
-                            className="px-3 py-1 text-xs border rounded bg-white dark:bg-gray-800 disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                        >
-                            {t.dashboard.prev}
-                        </button>
-                        <button
-                            onClick={handleNextPage}
-                            disabled={!nextKey || loading}
-                            className="px-3 py-1 text-xs border rounded bg-white dark:bg-gray-800 disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                        >
-                            {t.dashboard.next}
-                        </button>
-                    </div>
-                </div>
-
-                <div className="flex-grow overflow-auto relative">
-                    <table className="w-full text-left text-sm">
-                        <thead className="bg-gray-50 dark:bg-gray-800 sticky top-0 z-10 border-b border-gray-200 dark:border-gray-700">
-                            <tr>
-                                <th className="p-3 w-10 text-center">
-                                    <input
-                                        type="checkbox"
-                                        className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
-                                        checked={results.length > 0 && selectedKeys.size === results.length}
-                                        onChange={toggleSelectAll}
-                                    />
-                                </th>
-                                <th className="p-3 text-gray-600 dark:text-gray-300 font-medium">PK</th>
-                                <th className="p-3 text-gray-600 dark:text-gray-300 font-medium">SK</th>
-                                <th className="p-3 text-gray-600 dark:text-gray-300 font-medium">{t.dashboard.attributes}</th>
-                                <th className="p-3 w-32 text-gray-600 dark:text-gray-300 font-medium text-right">{t.dashboard.action}</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                            {results.length > 0 ? (
-                                results.map((item, idx) => (
-                                    <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                                        <td className="p-3 text-center">
-                                            <input
-                                                type="checkbox"
-                                                className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
-                                                checked={selectedKeys.has(getKeyString(item))}
-                                                onChange={() => toggleSelect(item)}
-                                            />
-                                        </td>
-                                        <td className="p-3 font-mono text-xs max-w-[150px] truncate" title={item.PK}>{item.PK}</td>
-                                        <td className="p-3 font-mono text-xs max-w-[150px] truncate" title={item.SK}>{item.SK}</td>
-                                        <td className="p-3 text-gray-500 truncate max-w-xs text-xs font-mono">
-                                            {getDisplayAttributes(item)}
-                                        </td>
-                                        <td className="p-3 text-right">
-                                            <div className="flex justify-end gap-2">
-                                                <Link
-                                                    href={`/tables/${tableName}/item?pk=${encodeURIComponent(item.PK)}&sk=${encodeURIComponent(item.SK)}&backUrl=${encodeURIComponent(`${pathname}?${searchParams.toString()}`)}`}
-                                                    className="text-blue-600 hover:underline text-xs"
-                                                >
-                                                    {t.common.detail}
-                                                </Link>
-                                                {!readOnly && (
-                                                    <button
-                                                        onClick={() => handleDeleteItem(item.PK, item.SK)}
-                                                        className="text-red-500 hover:text-red-700 text-xs hover:bg-red-50 dark:hover:bg-red-900/30 px-1 rounded flex items-center"
-                                                        title={t.common.delete}
-                                                    >
-                                                        {t.common.delete}
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
-                            ) : (
-                                !loading && (
-                                    <tr>
-                                        <td colSpan={5} className="p-12 text-center text-gray-500">
-                                            {hasSearched ? t.dashboard.noItems : t.dashboard.beforeSearch}
-                                        </td>
-                                    </tr>
-                                )
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            <ResultsTable
+                results={results}
+                loading={loading}
+                hasSearched={hasSearched}
+                page={page}
+                selectedKeys={selectedKeys}
+                toggleSelect={toggleSelect}
+                toggleSelectAll={toggleSelectAll}
+                tableName={tableName}
+                pathname={pathname}
+                searchParams={searchParams}
+                readOnly={readOnly}
+                handleDeleteItem={handleDeleteItem}
+                handlePrevPage={handlePrevPage}
+                handleNextPage={handleNextPage}
+                nextKey={nextKey}
+                t={t}
+            />
 
             {
                 isSettingsOpen && (

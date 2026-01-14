@@ -37,7 +37,7 @@ export async function getAvailableProfiles(): Promise<string[]> {
                 }
             }
         } catch {
-            console.error("Failed to read AWS credentials file");
+            console.error('Failed to read AWS credentials file')
         }
     }
 

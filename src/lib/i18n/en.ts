@@ -112,6 +112,7 @@ export const en = {
         noTablesAws: "No tables found in AWS Region ({region}) or access denied.",
         createFirstTable: "Click below to create your first table.",
         deleteTableConfirm: "Are you sure you want to delete table \"{tableName}\"? This action cannot be undone.",
+        deleteTableInputInstruction: "Please type \"{identifier}\" to confirm.",
         tableDeleted: "Table deleted successfully",
         systemManagement: "System Management",
         adminData: "Admin Data",

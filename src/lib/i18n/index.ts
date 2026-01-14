@@ -5,3 +5,5 @@ export const dictionary = {
     en,
     ja
 };
+
+export type Dictionary = typeof en;
