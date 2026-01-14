@@ -97,10 +97,6 @@ export default function Header({
                         </div>
                     </div>
 
-                    <div className="flex items-center w-28 gap-2 text-xs text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded border border-gray-200 dark:border-gray-700">
-                        <span className="font-mono">{accountId}</span>
-                    </div>
-
                     <div className="relative">
                         <select
                             value={currentMode === 'local' ? 'local' : currentRegion}
@@ -121,6 +117,10 @@ export default function Header({
                         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
                             <span className="material-symbols-outlined text-[16px]">expand_more</span>
                         </div>
+                    </div>
+
+                    <div className="flex items-center w-28 gap-2 text-xs text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded border border-gray-200 dark:border-gray-700">
+                        <span className="font-mono">{accountId}</span>
                     </div>
 
                     <div className="relative">

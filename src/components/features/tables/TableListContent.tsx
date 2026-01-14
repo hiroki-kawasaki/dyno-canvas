@@ -10,13 +10,17 @@ interface TableListContentProps {
     mode: EnvMode;
     adminTableName?: string;
     readOnly: boolean;
+    region: string;
+    accountId: string;
 }
 
 export default function TableListContent({
     tables,
     mode,
     adminTableName,
-    readOnly
+    readOnly,
+    region,
+    accountId
 }: TableListContentProps) {
     const { t } = useUI();
 
@@ -34,6 +38,8 @@ export default function TableListContent({
                 mode={mode}
                 adminTableName={adminTableName}
                 readOnly={readOnly}
+                region={region}
+                accountId={accountId}
             />
         </main>
     );

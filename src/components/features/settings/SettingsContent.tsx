@@ -94,12 +94,12 @@ export default function SettingsContent({
                             </span>
                         </div>
                         <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-700 pb-2">
-                            <span className="text-gray-600 dark:text-gray-400">{t.settings.accountId}</span>
-                            <span className="font-mono text-gray-800 dark:text-gray-200">{accountId}</span>
-                        </div>
-                        <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-700 pb-2">
                             <span className="text-gray-600 dark:text-gray-400">{t.settings.region}</span>
                             <span className="font-mono text-gray-800 dark:text-gray-200">{settings.region}</span>
+                        </div>
+                        <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-700 pb-2">
+                            <span className="text-gray-600 dark:text-gray-400">{t.settings.accountId}</span>
+                            <span className="font-mono text-gray-800 dark:text-gray-200">{accountId}</span>
                         </div>
                         <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-700 pb-2">
                             <span className="text-gray-600 dark:text-gray-400">{t.settings.adminTable}</span>

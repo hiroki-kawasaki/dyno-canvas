@@ -13,13 +13,17 @@ interface HomeContentProps {
     mode: EnvMode;
     adminTableName?: string;
     readOnly: boolean;
+    region: string;
+    accountId: string;
 }
 
 export default function HomeContent({
     tables,
     mode,
     adminTableName = "dyno-canvas",
-    readOnly
+    readOnly,
+    region,
+    accountId
 }: HomeContentProps) {
     const { t, showToast, confirm } = useUI();
     const router = useRouter();
@@ -100,7 +104,7 @@ export default function HomeContent({
                 </h2>
                 {!readOnly && <CreateTableModal />}
             </div>
-            <TableListTable tables={tables} mode={mode} adminTableName={adminTableName} readOnly={readOnly} />
+            <TableListTable tables={tables} mode={mode} adminTableName={adminTableName} readOnly={readOnly} region={region} accountId={accountId} />
         </main >
     );
 }

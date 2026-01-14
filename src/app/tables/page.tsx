@@ -5,7 +5,7 @@ import { ADMIN_TABLE_NAME } from '@lib/config';
 
 export default async function TablesPage() {
     const tables = await listTables();
-    const { mode, readOnly } = await getSettings();
+    const { mode, readOnly, region, accountId } = await getSettings();
 
     return (
         <TableListContent
@@ -13,6 +13,8 @@ export default async function TablesPage() {
             mode={mode}
             readOnly={readOnly}
             adminTableName={ADMIN_TABLE_NAME}
+            region={region}
+            accountId={accountId}
         />
     );
 }
