@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { logger } from '@lib/logger';
 
 export function proxy(request: NextRequest) {
     const authMode = process.env.DYNOCANVAS_AUTH || 'basic';
@@ -19,7 +20,7 @@ export function proxy(request: NextRequest) {
             const validPass = process.env.DYNOCANVAS_AUTH_PASS;
 
             if (!validUser || !validPass) {
-                console.error("Auth credentials not set. Access denied.");
+                logger.error("Auth credentials not set. Access denied.");
                 return new NextResponse('Server Configuration Error', { status: 500 });
             }
 
@@ -27,11 +28,11 @@ export function proxy(request: NextRequest) {
                 return NextResponse.next();
             }
         } catch {
-            console.error("Invalid auth header.");
+            logger.warn("Invalid auth header.");
         }
     }
 
-    console.error("Authentication required.");
+    logger.info("Authentication required.");
     return new NextResponse('Authentication required', {
         status: 401,
         headers: {

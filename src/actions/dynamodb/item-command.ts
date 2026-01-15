@@ -26,6 +26,7 @@ export async function createItem(
     tableName: string,
     item: unknown
 ) {
+    logger.debug({ tableName }, "createItem called");
     try {
         if (getReadOnly()) return { success: false, error: "Operation not allowed in Read-Only mode." };
         tableNameSchema.parse(tableName);
@@ -64,6 +65,7 @@ export async function deleteItem(
     pk: string,
     sk?: string
 ) {
+    logger.debug({ tableName, pk, sk }, "deleteItem called");
     try {
         if (getReadOnly()) return { success: false, error: "Operation not allowed in Read-Only mode." };
         tableNameSchema.parse(tableName);
@@ -95,6 +97,7 @@ export async function batchDeleteItems(
     tableName: string,
     keysIn: { PK: string; SK: string }[]
 ) {
+    logger.debug({ tableName, count: keysIn.length }, "batchDeleteItems called");
     try {
         if (getReadOnly()) return { success: false, error: "Operation not allowed in Read-Only mode." };
 
@@ -146,6 +149,7 @@ export async function batchDeleteItems(
 }
 
 export async function updateItem(tableName: string, item: DynamoItem) {
+    logger.debug({ tableName }, "updateItem called");
     try {
         if (getReadOnly()) return { success: false, error: "Operation not allowed in Read-Only mode." };
         tableNameSchema.parse(tableName);
@@ -207,6 +211,7 @@ export async function replaceItem(
     oldKey: { PK: string, SK: string },
     newItem: DynamoItem
 ) {
+    logger.debug({ tableName }, "replaceItem called");
     try {
         if (getReadOnly()) return { success: false, error: "Operation not allowed in Read-Only mode." };
         tableNameSchema.parse(tableName);

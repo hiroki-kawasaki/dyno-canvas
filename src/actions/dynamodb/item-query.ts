@@ -24,6 +24,7 @@ export async function getItem(
     pk: string,
     sk: string
 ): Promise<DynamoItem | undefined> {
+    logger.debug({ tableName, pk, sk }, "getItem called");
     try {
         const client = await getClient();
         const keys = await getTableKeys(tableName);
@@ -41,12 +42,13 @@ export async function getItem(
         }));
         return data.Item as DynamoItem | undefined;
     } catch (error) {
-        console.error("GetItem Error:", error);
+        logger.error({ err: error, tableName, pk, sk }, "GetItem Error");
         return undefined;
     }
 }
 
 export async function searchItems(params: SearchParams): Promise<SearchResponse> {
+    logger.debug({ params }, "searchItems called");
     try {
         const validated = searchParamsSchema.parse(params);
         const client = await getClient();
@@ -65,6 +67,7 @@ export async function searchItems(params: SearchParams): Promise<SearchResponse>
 }
 
 export async function getSearchCount(params: SearchParams) {
+    logger.debug({ params }, "getSearchCount called");
     try {
         const validated = searchParamsSchema.parse(params);
         const client = await getClient();
@@ -95,6 +98,7 @@ export async function exportAllItems(
     params: SearchParams,
     format: 'jsonl' | 'csv' = 'jsonl'
 ) {
+    logger.debug({ params, format }, "exportAllItems called");
     try {
         const validated = searchParamsSchema.parse(params);
         const client = await getClient();

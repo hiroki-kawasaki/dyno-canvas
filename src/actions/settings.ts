@@ -14,6 +14,7 @@ import {
     ADMIN_TABLE_NAME
 } from '@lib/config';
 import { Language } from '@/types';
+import { logger } from '@lib/logger';
 
 export type EnvMode = 'aws' | 'local';
 
@@ -37,7 +38,7 @@ export async function getAvailableProfiles(): Promise<string[]> {
                 }
             }
         } catch {
-            console.error('Failed to read AWS credentials file')
+            logger.warn({ err: 'Failed to read file', file }, 'Failed to read AWS credentials file');
         }
     }
 
@@ -128,7 +129,7 @@ export async function getSettings() {
             const data = await client.send(new GetCallerIdentityCommand({}));
             accountId = data.Account || 'Unknown';
         } catch (e) {
-            console.error("Failed to fetch account ID:", e);
+            logger.error({ err: e }, "Failed to fetch account ID");
         }
     }
 
