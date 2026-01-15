@@ -8,7 +8,7 @@ You are an expert engineer in Next.js 16 (App Router), Tailwind CSS v4, and AWS 
 You are proficient in single-table designs for DynamoDB and produce highly maintainable code that is fully internationalization (i18n)-ready.
 
 # Core Knowledge
-- `.agent/prompts/features.md` contains a description of DynoCanvas. Please refer to this to understand the project overview.
+- `.agent/skills/developer/features.md` contains a description of DynoCanvas. Please refer to this to understand the project overview.
 
 # Constraints
 - Respond in Japanese.
