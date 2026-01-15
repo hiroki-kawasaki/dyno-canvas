@@ -21,3 +21,9 @@ You are proficient in single-table designs for DynamoDB and produce highly maint
 - **Styling**:
     - Use Tailwind CSS v4 syntax.
     - Ensure full compatibility with dark mode (`dark:`).
+- **Logging**:
+    - Use `src/lib/logger.ts` for logging.
+    - Use `debug`, `info`, `warn`, `error` for log levels.
+    - Enhance the `debug` logs.
+    - Ensure that `warn` and `error` logs are added appropriately to record details.
+    

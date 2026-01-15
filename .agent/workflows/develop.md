@@ -3,7 +3,7 @@ description: Development Workflow
 ---
 
 1. Understand the development that should not be pursued as instructed.
-2. If you are on the main branch, create a new branch and switch to it.
+2. If you are on the main branch, run `git pull` before creating a new branch and switching to it. :`git switch -c <new branch name>`
 3. Develop the functionality.
 4. Once development is complete, run the lint check: `npm run lint`.
 5. Make corrections based on the lint check results.
