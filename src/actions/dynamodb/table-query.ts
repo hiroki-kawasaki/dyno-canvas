@@ -19,6 +19,7 @@ import {
 } from "./utils";
 
 export async function listTables(): Promise<string[]> {
+    logger.debug("listTables called");
     try {
         const client = await getClient();
         const data = await client.send(new ListTablesCommand({}));
@@ -30,6 +31,7 @@ export async function listTables(): Promise<string[]> {
 }
 
 export async function getTableDetails(tableName: string) {
+    logger.debug({ tableName }, "getTableDetails called");
     try {
         tableNameSchema.parse(tableName);
         const { mode } = await getSettings();
@@ -57,6 +59,7 @@ export async function getTableDetails(tableName: string) {
 }
 
 export async function getAccessPatterns(tableName: string): Promise<AccessPatternConfig[]> {
+    logger.debug({ tableName }, "getAccessPatterns called");
     try {
         tableNameSchema.parse(tableName);
         const patterns = await getAccessPatternsForTable(tableName);
@@ -75,6 +78,7 @@ export async function getAccessPatterns(tableName: string): Promise<AccessPatter
 }
 
 export async function exportTable(tableName: string) {
+    logger.debug({ tableName }, "exportTable called");
     try {
         const client = await getClient();
         let items: Record<string, unknown>[] = [];
@@ -99,13 +103,14 @@ export async function exportTable(tableName: string) {
         return { success: true, data: lines.join('\n') };
 
     } catch (err) {
-        console.error("Export Table Error:", err);
+        logger.error({ err }, "Export Table Error");
         const message = err instanceof Error ? err.message : "Unknown error";
         return { success: false, error: message };
     }
 }
 
 export async function exportAccessPatterns(tableName: string) {
+    logger.debug({ tableName }, "exportAccessPatterns called");
     try {
         const patterns = await getAccessPatternsForTable(tableName);
         const lines = patterns.map(p => {
@@ -116,7 +121,7 @@ export async function exportAccessPatterns(tableName: string) {
         return { success: true, data: lines.join('\n') };
 
     } catch (err) {
-        console.error("Export Patterns Error:", err);
+        logger.error({ err }, "Export Patterns Error");
         const message = err instanceof Error ? err.message : "Unknown error";
         return { success: false, error: message };
     }

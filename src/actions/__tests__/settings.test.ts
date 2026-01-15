@@ -14,6 +14,7 @@ import {
     IS_LOCAL_AVAILABLE,
     DEFAULT_REGION
 } from '@lib/config';
+import { logger } from '@lib/logger';
 import { promises as fs } from 'fs';
 
 jest.mock('next/headers', () => ({
@@ -24,17 +25,31 @@ jest.mock('next/cache', () => ({
     revalidatePath: jest.fn(),
 }));
 
-jest.mock('fs', () => ({
-    promises: {
-        readFile: jest.fn()
-    }
-}));
+jest.mock('fs', () => {
+    const originalFs = jest.requireActual('fs');
+    return {
+        ...originalFs,
+        promises: {
+            ...originalFs.promises,
+            readFile: jest.fn()
+        }
+    };
+});
 
 jest.mock("@aws-sdk/client-sts", () => ({
     STSClient: jest.fn().mockImplementation(() => ({
         send: jest.fn().mockResolvedValue({ Account: '123456789012' })
     })),
     GetCallerIdentityCommand: jest.fn()
+}));
+
+jest.mock('@lib/logger', () => ({
+    logger: {
+        warn: jest.fn(),
+        error: jest.fn(),
+        info: jest.fn(),
+        debug: jest.fn()
+    }
 }));
 
 describe('Settings Actions', () => {
@@ -73,6 +88,7 @@ aws_secret_access_key = B
             (fs.readFile as jest.Mock).mockRejectedValue(new Error('File not found'));
             const profiles = await getAvailableProfiles();
             expect(profiles).toEqual([]);
+            expect(logger.warn).toHaveBeenCalled();
         });
     });
 

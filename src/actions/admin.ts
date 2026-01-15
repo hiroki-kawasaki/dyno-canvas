@@ -25,6 +25,7 @@ import {
     AccessPatternDoc,
     AccessPatternConfig
 } from "@/types";
+import { logger } from "@lib/logger";
 
 async function getAccountId(mode: 'local' | 'aws', region?: string): Promise<string> {
     if (mode === 'local') {
@@ -37,24 +38,26 @@ async function getAccountId(mode: 'local' | 'aws', region?: string): Promise<str
         const data = await client.send(new GetCallerIdentityCommand({}));
         return data.Account || DYNOCANVAS_ENV_NAME;
     } catch (e) {
-        console.warn("Failed to get AWS Account ID, falling back to Env Name", e);
+        logger.warn({ err: e }, "Failed to get AWS Account ID, falling back to Env Name");
         return DYNOCANVAS_ENV_NAME;
     }
 }
 
 export async function checkAdminTableExists(region?: string): Promise<boolean> {
+    logger.debug({ region }, "checkAdminTableExists called");
     const { mode, region: currentRegion } = await getSettings();
     const client = getDynamoClient(mode === 'local', region || currentRegion);
     try {
         const data = await client.send(new ListTablesCommand({}));
         return (data.TableNames || []).includes(ADMIN_TABLE_NAME);
     } catch (error) {
-        console.error("Failed to list tables for checking admin table:", error);
+        logger.error({ err: error }, "Failed to list tables for checking admin table");
         throw error;
     }
 }
 
 export async function createAdminTable() {
+    logger.debug("createAdminTable called");
     const { mode, region } = await getSettings();
     const client = getDynamoClient(mode === 'local', region);
 
@@ -76,7 +79,7 @@ export async function createAdminTable() {
         revalidatePath('/');
         return { success: true };
     } catch (error) {
-        console.error("Failed to create admin table:", error);
+        logger.error({ err: error }, "Failed to create admin table");
         return { success: false, error: String(error) };
     }
 }
@@ -84,6 +87,7 @@ export async function createAdminTable() {
 export async function getAccessPatternsForTable(
     targetTableName: string
 ): Promise<AccessPatternDoc[]> {
+    logger.debug({ targetTableName }, "getAccessPatternsForTable called");
     const { mode, region } = await getSettings();
     const client = getDynamoClient(mode === 'local', region);
     const accountId = await getAccountId(mode, region);
@@ -107,12 +111,13 @@ export async function getAccessPatternsForTable(
 
         return result.Items.map(item => unmarshall(item) as AccessPatternDoc);
     } catch (error) {
-        console.error("Failed to get access patterns:", error);
+        logger.error({ err: error }, "Failed to get access patterns");
         return [];
     }
 }
 
 export async function getAllAccessPatterns(): Promise<AccessPatternDoc[]> {
+    logger.debug("getAllAccessPatterns called");
     const { mode, region } = await getSettings();
     const client = getDynamoClient(mode === 'local', region);
     const accountId = await getAccountId(mode, region);
@@ -135,7 +140,7 @@ export async function getAllAccessPatterns(): Promise<AccessPatternDoc[]> {
 
         return result.Items.map(item => unmarshall(item) as AccessPatternDoc);
     } catch (error) {
-        console.error("Failed to get all access patterns:", error);
+        logger.error({ err: error }, "Failed to get all access patterns");
         return [];
     }
 }
@@ -145,6 +150,7 @@ export async function saveAccessPattern(
     config: AccessPatternConfig,
     allowOverwrite: boolean = true
 ): Promise<{ success: boolean; error?: string }> {
+    logger.debug({ targetTableName, id: config.id }, "saveAccessPattern called");
     const { mode, region } = await getSettings();
     const client = getDynamoClient(mode === 'local', region);
     const accountId = await getAccountId(mode, region);
@@ -182,7 +188,7 @@ export async function saveAccessPattern(
         revalidatePath(`/tables/${targetTableName}`);
         return { success: true };
     } catch (error) {
-        console.error("Failed to save access pattern:", error);
+        logger.error({ err: error }, "Failed to save access pattern");
         if ((error as { name?: string }).name === 'ConditionalCheckFailedException') {
             return { success: false, error: "PatternAlreadyExists" };
         }
@@ -194,6 +200,7 @@ export async function deleteAccessPattern(
     targetTableName: string,
     patternId: string
 ) {
+    logger.debug({ targetTableName, patternId }, "deleteAccessPattern (admin) called");
     const { mode, region } = await getSettings();
     const client = getDynamoClient(mode === 'local', region);
     const accountId = await getAccountId(mode, region);
@@ -213,7 +220,7 @@ export async function deleteAccessPattern(
         revalidatePath(`/tables/${targetTableName}`);
         return { success: true };
     } catch (error) {
-        console.error("Failed to delete access pattern:", error);
+        logger.error({ err: error }, "Failed to delete access pattern");
         return { success: false, error: String(error) };
     }
 }

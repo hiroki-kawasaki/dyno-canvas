@@ -39,6 +39,7 @@ import {
 
 
 export async function createTable(tableName: string) {
+    logger.debug({ tableName }, "createTable called");
     try {
         if (getReadOnly()) return {
             success: false,
@@ -75,6 +76,7 @@ export async function createTable(tableName: string) {
 }
 
 export async function deleteTable(tableName: string) {
+    logger.debug({ tableName }, "deleteTable called");
     try {
         const validName = tableNameSchema.parse(tableName);
 
@@ -106,6 +108,7 @@ export async function createGSI(
     pk: string,
     sk?: string
 ) {
+    logger.debug({ tableName, indexName }, "createGSI called");
     try {
         if (getReadOnly()) return {
             success: false,
@@ -182,6 +185,7 @@ export async function deleteGSI(
     tableName: string,
     indexName: string
 ) {
+    logger.debug({ tableName, indexName }, "deleteGSI called");
     try {
         tableNameSchema.parse(tableName);
         if (getReadOnly()) {
@@ -213,6 +217,7 @@ export async function updateTTL(
     enabled: boolean,
     attributeName: string
 ) {
+    logger.debug({ tableName, enabled, attributeName }, "updateTTL called");
     try {
         if (getReadOnly()) return { success: false, error: "Operation not allowed in Read-Only mode." };
         const validated = updateTtlSchema.parse({ tableName, enabled, attributeName });
@@ -237,6 +242,7 @@ export async function importItems(
     tableName: string,
     formData: FormData
 ) {
+    logger.debug({ tableName }, "importItems called");
     try {
         if (getReadOnly()) return { success: false, error: "Operation not allowed in Read-Only mode." };
         const file = formData.get('file') as File;
@@ -325,6 +331,7 @@ export async function upsertAccessPattern(
     config: AccessPatternConfig,
     allowOverwrite: boolean = true
 ) {
+    logger.debug({ tableName, id: config.id }, "upsertAccessPattern called");
     try {
         if (getReadOnly()) return {
             success: false,
@@ -347,6 +354,7 @@ export async function deleteAccessPattern(
     tableName: string,
     patternId: string
 ) {
+    logger.debug({ tableName, patternId }, "deleteAccessPattern (wrapper) called");
     if (getReadOnly()) return {
         success: false,
         error: "Operation not allowed in Read-Only mode."
@@ -358,6 +366,7 @@ export async function importAccessPatterns(
     tableName: string,
     formData: FormData
 ) {
+    logger.debug({ tableName }, "importAccessPatterns called");
     try {
         if (getReadOnly()) return {
             success: false,
