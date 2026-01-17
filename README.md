@@ -14,7 +14,7 @@ DynoCanvas streamlines the workflow for developers working with DynamoDB by prov
 * **Dashboard**: View all available tables in the connected region or local instance.
 * **CRUD Operations**: Create, Read, Update, and Delete items. Supports replacement of items when Primary Keys are modified.
 * **Batch Operations**: Bulk delete functionality for efficient data cleanup.
-* **Table Administration**: Create new tables with standard `PK` and `SK` schema. Delete tables (configurable permissions).
+* **Table Administration**: Create new tables with standard `PK` and `SK` schema. Delete tables with secure confirmation (requires typing the table name to confirm).
 
 ### 🛠 Advanced Item Editor
 * **Dual Modes**:
@@ -38,7 +38,7 @@ DynoCanvas streamlines the workflow for developers working with DynamoDB by prov
 
 ### 🌍 Environment & Security
 * **Multi-Environment**: Seamlessly switch between **AWS Regions** and **DynamoDB Local**.
-* **AWS Profile Support**: Switch between local AWS profiles defined in credentials files.
+* **AWS Profile Support**: Switch between local AWS profiles defined in credentials files. The interface automatically refreshes and handles credential transitions (e.g., error boundary resets) upon switching.
 * **Read-Only Mode**: Environment-flag based restriction to prevent accidental writes.
 * **Basic Authentication**: Optional security layer for hosted deployments.
 * **Internationalization**: Full support for English and Japanese interfaces.
