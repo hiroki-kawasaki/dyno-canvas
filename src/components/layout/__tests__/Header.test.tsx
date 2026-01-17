@@ -11,8 +11,14 @@ jest.mock('@actions/settings', () => ({
     switchProfile: jest.fn(),
 }));
 
+const mockPush = jest.fn();
+
 jest.mock('next/navigation', () => ({
     usePathname: jest.fn(),
+    useRouter: () => ({
+        push: mockPush,
+        refresh: jest.fn(),
+    }),
 }));
 
 const mockSystemStatus = {
@@ -56,6 +62,7 @@ describe('Header Component', () => {
 
         await waitFor(() => {
             expect(settingsActions.switchEnvMode).toHaveBeenCalledWith('local');
+            expect(mockPush).toHaveBeenCalledWith('/');
         });
     });
 
@@ -67,6 +74,7 @@ describe('Header Component', () => {
 
         await waitFor(() => {
             expect(settingsActions.switchRegion).toHaveBeenCalledWith('ap-northeast-1');
+            expect(mockPush).toHaveBeenCalledWith('/');
         });
     });
 

@@ -47,7 +47,7 @@ export default function ActionMenu({
             </button>
 
             {isActionsOpen && (
-                <div className="absolute right-0 mt-1 w-70 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-lg z-50 text-sm py-1 animate-fade-in-up">
+                <div className="absolute right-0 mt-1 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-lg z-50 text-sm py-1 animate-fade-in-up">
                     {!readOnly && (
                         <button
                             onClick={() => setIsBulkDeleteModalOpen(true)}

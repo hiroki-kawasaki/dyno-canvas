@@ -16,6 +16,7 @@ export const ja = {
         enabled: "有効",
         disabled: "無効",
         authError: "認証エラーが発生しました。認証情報を確認してください。",
+        tryAgain: "再試行",
     },
     header: {
         local: "ローカル",

@@ -2,7 +2,7 @@
 
 import { useTransition } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
     switchEnvMode,
     switchRegion,
@@ -32,6 +32,7 @@ export default function Header({
     const { language, setLanguage, t, toggleSidebar, accountId, theme, setTheme } = useUI();
     const [isPending, startTransition] = useTransition();
     const pathname = usePathname();
+    const router = useRouter();
 
     const isItemDetailPage = pathname.includes('/item');
 
@@ -44,12 +45,14 @@ export default function Header({
             } else {
                 await switchProfile(value);
             }
+            router.push('/');
         });
     };
 
     const handleRegionChange = (value: string) => {
         startTransition(async () => {
             await switchRegion(value);
+            router.push('/');
         });
     };
 

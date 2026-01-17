@@ -16,6 +16,7 @@ export const en = {
         enabled: "Enabled",
         disabled: "Disabled",
         authError: "Authentication Error occurred. Please check your credentials.",
+        tryAgain: "Try Again",
     },
     header: {
         local: "Local",

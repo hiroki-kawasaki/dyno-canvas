@@ -57,7 +57,7 @@ export default function SearchForm({
     const showSearchControls = mode === 'free' || (mode === 'pattern' && !!currentPattern);
 
     return (
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm relative z-20">
+        <div className="relative z-20">
             {mode === 'pattern' && patterns.length === 0 && !patternsLoading ? (
                 <div className="flex-1 p-3 text-sm text-red-600 border border-red-200 bg-red-50 dark:bg-red-900/10 dark:border-red-800 dark:text-red-400 rounded flex items-center gap-2">
                     <span className="material-symbols-outlined text-[18px]">warning</span>
