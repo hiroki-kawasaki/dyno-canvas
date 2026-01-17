@@ -16,15 +16,16 @@ import {
     PutItemCommandInput,
     DeleteItemCommandInput
 } from '@aws-sdk/client-dynamodb';
-import {
-    GetCallerIdentityCommand,
-    STSClient
-} from '@aws-sdk/client-sts';
 import * as adminActions from '@actions/admin';
 import { AccessPatternConfig } from '@/types';
 
 jest.mock('@actions/settings', () => ({
-    getSettings: jest.fn().mockResolvedValue({ mode: 'aws', region: 'us-east-1' }),
+    getSettings: jest.fn().mockResolvedValue({
+        mode: 'aws',
+        region: 'us-east-1',
+        accountId: '123456789012',
+        currentProfile: 'default'
+    }),
 }));
 
 jest.mock('next/cache', () => ({
@@ -32,12 +33,10 @@ jest.mock('next/cache', () => ({
 }));
 
 const ddbMock = mockClient(DynamoDBDocumentClient);
-const stsMock = mockClient(STSClient);
 
 describe('Admin Actions', () => {
     beforeEach(() => {
         ddbMock.reset();
-        stsMock.reset();
         jest.clearAllMocks();
     });
 
@@ -69,7 +68,6 @@ describe('Admin Actions', () => {
     });
 
     it('getAccessPatternsForTable should query admin table', async () => {
-        stsMock.on(GetCallerIdentityCommand).resolves({ Account: '123456789012' });
         ddbMock.on(QueryCommand).resolves({
             Items: [
                 {
@@ -90,7 +88,6 @@ describe('Admin Actions', () => {
     });
 
     it('saveAccessPattern should put item to admin table', async () => {
-        stsMock.on(GetCallerIdentityCommand).resolves({ Account: '123456789012' });
         ddbMock.on(PutItemCommand).resolves({});
 
         const config: AccessPatternConfig = {
@@ -110,7 +107,6 @@ describe('Admin Actions', () => {
     });
 
     it('deleteAccessPattern should delete item from admin table', async () => {
-        stsMock.on(GetCallerIdentityCommand).resolves({ Account: '123456789012' });
         ddbMock.on(DeleteItemCommand).resolves({});
 
         const result = await adminActions.deleteAccessPattern('MyTable', 'p1');
@@ -120,3 +116,4 @@ describe('Admin Actions', () => {
         expect(input.Key?.PK.S).toContain('123456789012');
     });
 });
+

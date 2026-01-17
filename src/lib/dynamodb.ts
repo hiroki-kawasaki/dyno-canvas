@@ -3,7 +3,7 @@ import {
     DynamoDBClientConfig
 } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
-import { fromIni } from "@aws-sdk/credential-providers";
+import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 
 
 export function getDynamoClient(useLocal: boolean = false, region?: string, profile?: string) {
@@ -23,7 +23,7 @@ export function getDynamoClient(useLocal: boolean = false, region?: string, prof
         };
     } else {
         if (profile) {
-            config.credentials = fromIni({ profile });
+            config.credentials = fromNodeProviderChain({ profile });
         }
     }
 

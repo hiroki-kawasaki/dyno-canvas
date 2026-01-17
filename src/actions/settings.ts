@@ -10,8 +10,8 @@ import {
     IS_LOCAL_AVAILABLE,
     DEFAULT_REGION,
     AVAILABLE_REGIONS,
+    ADMIN_TABLE_NAME,
     getReadOnly,
-    ADMIN_TABLE_NAME
 } from '@lib/config';
 import { Language } from '@/types';
 import { logger } from '@lib/logger';
@@ -122,8 +122,8 @@ export async function getSettings() {
         accountId = 'Local';
     } else {
         try {
-            const { fromIni } = await import("@aws-sdk/credential-providers");
-            const credentials = currentProfile ? fromIni({ profile: currentProfile }) : undefined;
+            const { fromNodeProviderChain } = await import("@aws-sdk/credential-providers");
+            const credentials = currentProfile ? fromNodeProviderChain({ profile: currentProfile }) : undefined;
 
             const client = new STSClient({ region, credentials });
             const data = await client.send(new GetCallerIdentityCommand({}));

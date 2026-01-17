@@ -86,10 +86,10 @@ export default function ResultsTable({
                                     onChange={toggleSelectAll}
                                 />
                             </th>
-                            <th className="p-3 text-gray-600 dark:text-gray-300 font-medium">PK</th>
-                            <th className="p-3 text-gray-600 dark:text-gray-300 font-medium">SK</th>
+                            <th className="p-3 w-60 text-gray-600 dark:text-gray-300 font-medium">PK</th>
+                            <th className="p-3 w-60 text-gray-600 dark:text-gray-300 font-medium">SK</th>
                             <th className="p-3 text-gray-600 dark:text-gray-300 font-medium">{t.dashboard.attributes}</th>
-                            <th className="p-3 w-32 text-gray-600 dark:text-gray-300 font-medium text-right">{t.dashboard.action}</th>
+                            <th className="p-3 w-32 text-gray-600 dark:text-gray-300 font-medium text-right"></th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200 dark:divide-gray-700">

@@ -48,7 +48,7 @@ export default function ErrorBoundary({
                     onClick={reset}
                     className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-900"
                 >
-                    Try Again
+                    {t.common.tryAgain}
                 </button>
             )}
         </div>
